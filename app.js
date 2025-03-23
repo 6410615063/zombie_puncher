@@ -30,12 +30,23 @@ const wall = new THREE.Mesh(wallGeometry, wallMaterial);
 wall.position.set(0, 2.5, -10); // Position the wall
 scene.add(wall);
 
+// Add a black outline to the wall
+const wallEdges = new THREE.EdgesGeometry(wallGeometry); // Get the edges of the wall
+const wallOutlineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 }); // Black color
+const wallOutline = new THREE.LineSegments(wallEdges, wallOutlineMaterial);
+wallOutline.position.copy(wall.position); // Match the wall's position
+scene.add(wallOutline);
+
 // Create a player (a simple cube for now)
 const playerGeometry = new THREE.BoxGeometry(1, 1, 1);
 const playerMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue color
 const player = new THREE.Mesh(playerGeometry, playerMaterial);
 player.position.set(0, 0.5, 0); // Position the player slightly above the ground
 scene.add(player);
+
+// Create bounding boxes for collision detection
+const wallBoundingBox = new THREE.Box3().setFromObject(wall);
+const playerBoundingBox = new THREE.Box3();
 
 // Movement variables
 const movement = {
@@ -115,6 +126,8 @@ function updateCameraPosition() {
 // Update player position in the animation loop
 function updatePlayerPosition() {
     const speed = 0.1; // Movement speed
+    const previousPosition = player.position.clone(); // Save the player's position before moving
+
     if (movement.forward) {
         player.position.z -= speed * Math.cos(camera.rotation.y);
         player.position.x -= speed * Math.sin(camera.rotation.y);
@@ -132,6 +145,15 @@ function updatePlayerPosition() {
         player.position.z -= speed * Math.sin(camera.rotation.y);
     }
 
+    // Update the player's bounding box
+    playerBoundingBox.setFromObject(player);
+
+    // Check for collision with the wall
+    if (playerBoundingBox.intersectsBox(wallBoundingBox)) {
+        // If there's a collision, revert to the previous position
+        player.position.copy(previousPosition);
+    }
+
     // Update the camera position after moving the player
     updateCameraPosition();
 }
@@ -139,10 +161,10 @@ function updatePlayerPosition() {
 // Update camera rotation in the animation loop
 function updateCameraRotation() {
     if (cameraRotation.left) {
-        camera.rotation.y -= cameraRotationSpeed; // Rotate clockwise
+        camera.rotation.y += cameraRotationSpeed; // Rotate counterclockwise (swapped with E)
     }
     if (cameraRotation.right) {
-        camera.rotation.y += cameraRotationSpeed; // Rotate counterclockwise
+        camera.rotation.y -= cameraRotationSpeed; // Rotate clockwise (swapped with Q)
     }
 }
 
