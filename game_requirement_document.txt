@@ -1,0 +1,143 @@
+Idea
+    a 3D game
+    control without using mouse
+    a guy trying to decend a dungeon, fending off zombies using weapons he found
+    the dungeon is randomly generated
+    each dungeon floor consist of:
+        rooms
+        zombies
+        weapons
+        a stair leading to the next floor
+        health potion?
+    charging up attack using the space key, release the key to attack, dealing damage & knockback based on charge
+    the zombies chase the player and perform a delayed attack at close range, dealing damage
+    the game is endless, end when the player run out of health
+    has a score system based on amount of zombies killed and amount of floors decended
+
+Tech Stack (three.js)
+    three.js (3D rendering?)
+    vite (running server?)
+Step-by-Step Implementation plan
+    You must only perform these instruction one step at a time
+    After you are done, I will perform the test to validate your work
+    If your work pass the test, I will then tell you to perform the next step
+    
+    1. make & render a 3D game with a grass field, a light blue sky, and a single stone wall
+        Test: I must see a grass field, a blue sky, and a stone wall
+    2. add player movement using the WSAD/Arrow keys for movement
+        - multiple keys must be able to be pressed at the same time (including key actions implemented at later steps)
+        Test: I will try using the WASD and Arrow keys
+    3. add player camera rotation using Q and E keys. 
+        - Q to rotate counterclockwise.
+        - E to rotate clockwise
+        Test: I will try to use the Q and E keys
+    4. add player and wall hitbox. Player must be able to colide with the wall
+        Test: I will try to run at the stone wall
+    5. add a zombie in front of the wall. Dark green skin, orange shirt, and brown pants
+        Test: I will look at the zombie
+    6. add zombie movement. 
+        - Make the zombie chase the player
+        - Make the zombie slower than the player
+        Test: I will try to walk away from the zombie
+    7. add hitbox to the zombie.
+        - The zombie must be able to colide with both the player and the wall
+        Test: I will try to make the zombie run at the wall
+    8. add punching graphic. Like how a FPS game would do for melee attack
+        - display a fist at the right side of the screen
+        - holding the Space key pull the fist back
+        - If the fist is fully charged, it will start shaking. Slightly but visible
+        - release the Space key launch the fist forward, then retract it back to normal position
+        Test: I will try to move around, rotating the camera, and press the Space key
+    9. add health to both the player and zombie
+        - display the player's health bar at the top left corner of the screen
+        - display the zombie's health bar at the top of its head
+        - player's health bar is more detailed
+        - zombie's health bar can just be a line (thick enough to be visible)
+        Test: I will look for these health bar
+    10. add a red tile behind the player
+        Test: I will look for it
+    11. add damage & death system
+        - when the player or zombie step on the red tile, they take damage
+        - if the zombie run out of health, it dies, leaving behind a corpse
+        - the player's health bar must update alongside the player's health
+        - if the player run out of health, the game stop, and the "game over" screen show up
+        Test: I will try to make both the player and zombie walk over the red tile
+    12. add zombie attack animation
+        - when the zombie get close enough to the player, it will stop moving, and try to punch the player
+        Test: I will try to get attacked by the zombie
+    13. make the screen red when getting hitbox
+        - give the screen a light red filter for a second when the player take damage
+        Test: I will try to take damage (zombie and red tile)
+    14. add damage to zombie's attack
+        Test: I will try to get hit by the zombie
+    15. make the player's punch damage the zombie
+        - the player's punching range should be slightly longer than the zombie
+        Test: I will try to punch the zombie
+    16. add a baseball bat leaning on the wall
+        Test: I will look for it
+    17. add an inventory system & display
+        - add an inventory hotbar at the center bottom of the screen
+        - number key (1-9) can be used to cycle between each inventory slot
+        - key 0 make the player use their fist
+        Test: I will try using the number keys
+    18. allow the baseball bat to be picked up by player
+        - player pick up the weapon when they touch it
+        - once picked up, the bat disappear from the wall, and appear in the inventory
+        Test: I will try to pick the baseball bat up
+    19. allow the baseball bat to be used as a weapon for attacking
+        - the bat do more damage than punching
+        - the bat has more range than punching
+        - the bat has its own charging & attacking animation
+        Test: I will try it out
+    20. add 2 more zombies next to the first one
+        Test: I will play the game
+    21. add a durability system to weapon
+        - a weapon's durability goes down when you land an attack with it
+        - the weapon disappear when it ran out of durability
+        Test: I will play the game
+    21. try making a dungeon with rooms, then render it as a map on the wall
+        Test: I will look for it
+    22. change the grass field into a stone floor
+        Test: I will play the game
+    23. try making a room with an entrance
+        Test: I will look for it
+    24. add another room connected to that room
+        Test: I will look for it
+    25. add 2 more rooms, one with 2 baseball bats, another with 2 zombies
+        Test: I will look for it
+    26. get ready for actually making a dungeon floor by removing everything except for the player and the stone floor
+        - just remove them from the level for now. Dont actually remove the ability to create & render them
+        Test: I will look for it
+    27. create a room with the player inside
+        Test: I will play the game
+    28. create 2 rooms connect to the first
+        Test: I will play the game
+    29. create 2 more rooms, one with 2 baseball bats, another with 2 zombies
+        Test: I will play the game
+    30. add a score system
+        - gain score when killing zombie, scale with amount of floor decended
+        - add a score display at the top right corner of the screen
+        - show current score & high score at the game over screen
+        Test: I will look for it
+    31. add 1 more room with a stair
+        Test: I will play the game
+    32. make the stair take the player to the next floor, also with 5 rooms
+        - the new floor also has weapons & zombies
+        - add a floor display at the top right of the screen
+        Test: I will play the game
+    33. now add a stair to the 2nd floor (if you havent add one)
+        Test: I will play the game
+    34. now make it so that every floors has a stair that lead to the next floor
+        - and make it so that every floor has weapons and zombies
+        Test: I will play the game
+    35. make it so that the deeper you decend the floor, the more zombies each floor will have
+        - make sure that there are enough weapons to kill all zombies
+        Test: I will play the game
+    36. add knockback when hitting zombies
+        - the more you charge an attack, the stronger the knockback
+        Test: I will play the game
+    37. add 2 more weapons
+        - do more/less damage
+        - more/less attack range
+        - faster/slower attack speed
+        Test: I will find & try them out

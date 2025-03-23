@@ -1,0 +1,5 @@
+need to start up fnm & node every time
+- run the first line of the bash script inside git bash manually (eval "$(fnm env --use-on-cd)")
+
+start server -> npx vite
+webpage -> localhost:5173
