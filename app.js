@@ -96,6 +96,9 @@ const cameraRotation = {
 };
 const cameraRotationSpeed = 0.05; // Speed of rotation
 
+// Zombie movement speed
+const zombieSpeed = 0.05; // Slower than the player
+
 // Event listeners for key press and release
 window.addEventListener('keydown', (event) => {
     switch (event.key) {
@@ -201,6 +204,20 @@ function updateCameraRotation() {
     }
 }
 
+// Update zombie position in the animation loop
+function updateZombiePosition() {
+    // Calculate the direction vector from the zombie to the player
+    const direction = new THREE.Vector3();
+    direction.subVectors(player.position, zombieGroup.position).normalize();
+
+    // Move the zombie toward the player
+    zombieGroup.position.x += direction.x * zombieSpeed;
+    zombieGroup.position.z += direction.z * zombieSpeed;
+
+    // Make the zombie look at the player
+    zombieGroup.lookAt(player.position.x, zombieGroup.position.y, player.position.z);
+}
+
 // Modify the animation loop to include player movement and camera updates
 function animate() {
     requestAnimationFrame(animate);
@@ -210,6 +227,9 @@ function animate() {
 
     // Update camera rotation
     updateCameraRotation();
+
+    // Update zombie position
+    updateZombiePosition();
 
     // Update camera position after all changes
     updateCameraPosition();
