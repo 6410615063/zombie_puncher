@@ -80,6 +80,7 @@ scene.add(zombieGroup);
 // Create bounding boxes for collision detection
 const wallBoundingBox = new THREE.Box3().setFromObject(wall);
 const playerBoundingBox = new THREE.Box3();
+const zombieBoundingBox = new THREE.Box3();
 
 // Movement variables
 const movement = {
@@ -186,7 +187,13 @@ function updatePlayerPosition() {
 
     // Check for collision with the wall
     if (playerBoundingBox.intersectsBox(wallBoundingBox)) {
-        // If there's a collision, revert to the previous position
+        // If there's a collision with the wall, revert to the previous position
+        player.position.copy(previousPosition);
+    }
+
+    // Check for collision with the zombie
+    if (playerBoundingBox.intersectsBox(zombieBoundingBox)) {
+        // If there's a collision with the zombie, revert to the previous position
         player.position.copy(previousPosition);
     }
 
@@ -206,6 +213,15 @@ function updateCameraRotation() {
 
 // Update zombie position in the animation loop
 function updateZombiePosition() {
+    // Update the zombie's bounding box
+    zombieBoundingBox.setFromObject(zombieGroup);
+
+    // Check for collision with the player
+    if (zombieBoundingBox.intersectsBox(playerBoundingBox)) {
+        // If there's a collision, stop the zombie's movement
+        return;
+    }
+
     // Calculate the direction vector from the zombie to the player
     const direction = new THREE.Vector3();
     direction.subVectors(player.position, zombieGroup.position).normalize();
