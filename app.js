@@ -44,6 +44,23 @@ const player = new THREE.Mesh(playerGeometry, playerMaterial);
 player.position.set(0, 0.5, 0); // Position the player slightly above the ground
 scene.add(player);
 
+// Create a fist (attached to the player)
+const fistGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+const fistMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red color for the fist
+const fist = new THREE.Mesh(fistGeometry, fistMaterial);
+fist.position.set(0.75, 0, 0.75); // Position the fist relative to the player
+player.add(fist); // Attach the fist to the player
+
+// Create a fist (visible in the camera view)
+const fistGeometryCamera = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+const fistMaterialCamera = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red color for the fist
+const fistCamera = new THREE.Mesh(fistGeometryCamera, fistMaterialCamera);
+
+// Position the fist in front of the camera
+fistCamera.position.set(0.5, -0.5, -1); // Slightly to the right, below, and in front of the camera
+camera.add(fistCamera); // Attach the fist to the camera
+scene.add(camera); // Ensure the camera (with the fist) is part of the scene
+
 // Create a zombie (composed of cubes)
 const zombieGroup = new THREE.Group(); // Group to hold all parts of the zombie
 
@@ -100,6 +117,10 @@ const cameraRotationSpeed = 0.05; // Speed of rotation
 // Zombie movement speed
 const zombieSpeed = 0.05; // Slower than the player
 
+// Variables for charging attack
+let isCharging = false;
+let chargeStartTime = 0;
+
 // Event listeners for key press and release
 window.addEventListener('keydown', (event) => {
     switch (event.key) {
@@ -124,6 +145,12 @@ window.addEventListener('keydown', (event) => {
             break;
         case 'e': // Rotate clockwise
             cameraRotation.right = true;
+            break;
+        case ' ':
+            if (!isCharging) {
+                isCharging = true;
+                chargeStartTime = performance.now(); // Record the time when charging starts
+            }
             break;
     }
 });
@@ -151,6 +178,21 @@ window.addEventListener('keyup', (event) => {
             break;
         case 'e': // Stop rotating clockwise
             cameraRotation.right = false;
+            break;
+        case ' ':
+            if (isCharging) {
+                isCharging = false;
+                const chargeDuration = (performance.now() - chargeStartTime) / 1000; // Calculate charge duration in seconds
+
+                // Calculate damage and knockback based on charge duration
+                const damage = Math.min(chargeDuration * 10, 50); // Cap damage at 50
+                const knockback = Math.min(chargeDuration * 2, 10); // Cap knockback at 10
+
+                // Apply knockback to the zombie
+                applyKnockbackToZombie(knockback);
+
+                console.log(`Attack released! Damage: ${damage}, Knockback: ${knockback}`);
+            }
             break;
     }
 });
@@ -234,6 +276,34 @@ function updateZombiePosition() {
     zombieGroup.lookAt(player.position.x, zombieGroup.position.y, player.position.z);
 }
 
+// Function to apply knockback to the zombie
+function applyKnockbackToZombie(knockback) {
+    // Calculate the direction vector from the player to the zombie
+    const direction = new THREE.Vector3();
+    direction.subVectors(zombieGroup.position, player.position).normalize();
+
+    // Apply knockback to the zombie's position
+    zombieGroup.position.x += direction.x * knockback;
+    zombieGroup.position.z += direction.z * knockback;
+
+    // Update the zombie's bounding box
+    zombieBoundingBox.setFromObject(zombieGroup);
+}
+
+// Function to update the fist during charging
+function updateFistDuringCharging() {
+    if (isCharging) {
+        const chargeDuration = (performance.now() - chargeStartTime) / 1000; // Calculate charge duration in seconds
+        const scale = Math.min(1 + chargeDuration, 2); // Scale the fist up to 2x size
+
+        // Scale the fist
+        fistCamera.scale.set(scale, scale, scale);
+    } else {
+        // Reset the fist's scale after the attack
+        fistCamera.scale.set(1, 1, 1);
+    }
+}
+
 // Modify the animation loop to include player movement and camera updates
 function animate() {
     requestAnimationFrame(animate);
@@ -246,6 +316,9 @@ function animate() {
 
     // Update zombie position
     updateZombiePosition();
+
+    // Update the fist during charging
+    updateFistDuringCharging();
 
     // Update camera position after all changes
     updateCameraPosition();
