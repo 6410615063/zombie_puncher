@@ -8,8 +8,8 @@ scene.background = new THREE.Color(0x87CEEB); // Light blue sky
 
 // Create a camera (PerspectiveCamera)
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 10, 20); // Move the camera up and back
-camera.lookAt(0, 0, 0); // Make the camera look at the origin
+camera.position.set(0, 1.5, 10); // Position the camera slightly above the ground and behind the player
+camera.rotation.y = Math.PI; // Rotate the camera to face the negative Z direction (toward the wall)
 
 // Create a WebGL renderer
 const renderer = new THREE.WebGLRenderer();
@@ -45,6 +45,13 @@ const movement = {
     right: false,
 };
 
+// Add camera rotation variables
+const cameraRotation = {
+    left: false,  // Rotate counterclockwise (Q)
+    right: false, // Rotate clockwise (E)
+};
+const cameraRotationSpeed = 0.05; // Speed of rotation
+
 // Event listeners for key press and release
 window.addEventListener('keydown', (event) => {
     switch (event.key) {
@@ -63,6 +70,12 @@ window.addEventListener('keydown', (event) => {
         case 'd':
         case 'ArrowRight':
             movement.right = true;
+            break;
+        case 'q': // Rotate counterclockwise
+            cameraRotation.left = true;
+            break;
+        case 'e': // Rotate clockwise
+            cameraRotation.right = true;
             break;
     }
 });
@@ -85,17 +98,18 @@ window.addEventListener('keyup', (event) => {
         case 'ArrowRight':
             movement.right = false;
             break;
+        case 'q': // Stop rotating counterclockwise
+            cameraRotation.left = false;
+            break;
+        case 'e': // Stop rotating clockwise
+            cameraRotation.right = false;
+            break;
     }
 });
 
 // Update the camera position to match the player's position
 function updateCameraPosition() {
     camera.position.set(player.position.x, player.position.y + 1.5, player.position.z); // Slightly above the player
-    camera.lookAt(
-        player.position.x + Math.sin(camera.rotation.y), // Look in the direction the player is facing
-        player.position.y + 1.5,
-        player.position.z - Math.cos(camera.rotation.y)
-    );
 }
 
 // Update player position in the animation loop
@@ -122,12 +136,28 @@ function updatePlayerPosition() {
     updateCameraPosition();
 }
 
+// Update camera rotation in the animation loop
+function updateCameraRotation() {
+    if (cameraRotation.left) {
+        camera.rotation.y -= cameraRotationSpeed; // Rotate clockwise
+    }
+    if (cameraRotation.right) {
+        camera.rotation.y += cameraRotationSpeed; // Rotate counterclockwise
+    }
+}
+
 // Modify the animation loop to include player movement and camera updates
 function animate() {
     requestAnimationFrame(animate);
 
     // Update player position
     updatePlayerPosition();
+
+    // Update camera rotation
+    updateCameraRotation();
+
+    // Update camera position after all changes
+    updateCameraPosition();
 
     renderer.render(scene, camera);
 }
