@@ -121,6 +121,14 @@ const zombieSpeed = 0.05; // Slower than the player
 let isCharging = false;
 let chargeStartTime = 0;
 
+// Zombie health
+let zombieHealth = 100;
+
+// Player health
+let playerHealth = 100;
+
+let isZombieAlive = true; // Flag to track if the zombie is alive
+
 // Event listeners for key press and release
 window.addEventListener('keydown', (event) => {
     switch (event.key) {
@@ -234,9 +242,20 @@ function updatePlayerPosition() {
     }
 
     // Check for collision with the zombie
-    if (playerBoundingBox.intersectsBox(zombieBoundingBox)) {
+    if (isZombieAlive && playerBoundingBox.intersectsBox(zombieBoundingBox)) {
         // If there's a collision with the zombie, revert to the previous position
         player.position.copy(previousPosition);
+
+        // Reduce the player's health
+        playerHealth -= 1; // Reduce health gradually on collision
+        console.log(`Player Health: ${playerHealth}`);
+
+        // Check if the player is dead
+        if (playerHealth <= 0) {
+            console.log("Game Over! Player defeated.");
+            // Stop the game loop
+            return;
+        }
     }
 
     // Update the camera position after moving the player
@@ -286,8 +305,26 @@ function applyKnockbackToZombie(knockback) {
     zombieGroup.position.x += direction.x * knockback;
     zombieGroup.position.z += direction.z * knockback;
 
-    // Update the zombie's bounding box
-    zombieBoundingBox.setFromObject(zombieGroup);
+    // Reduce the zombie's health
+    const damage = Math.min((performance.now() - chargeStartTime) / 100, 50); // Damage based on charge duration
+    zombieHealth -= damage;
+
+    console.log(`Zombie Health: ${zombieHealth}`);
+
+    // Check if the zombie is dead
+    if (zombieHealth <= 0) {
+        console.log("Zombie defeated!");
+        scene.remove(zombieGroup); // Remove the zombie from the scene
+
+        // Reset the zombie's bounding box to prevent further collisions
+        zombieBoundingBox.makeEmpty();
+
+        // Mark the zombie as dead
+        isZombieAlive = false;
+    } else {
+        // Update the zombie's bounding box
+        zombieBoundingBox.setFromObject(zombieGroup);
+    }
 }
 
 // Function to update the fist during charging
