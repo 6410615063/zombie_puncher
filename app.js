@@ -44,6 +44,39 @@ const player = new THREE.Mesh(playerGeometry, playerMaterial);
 player.position.set(0, 0.5, 0); // Position the player slightly above the ground
 scene.add(player);
 
+// Create a zombie (composed of cubes)
+const zombieGroup = new THREE.Group(); // Group to hold all parts of the zombie
+
+// Zombie body (orange shirt)
+const bodyGeometry = new THREE.BoxGeometry(1, 1.5, 0.5);
+const bodyMaterial = new THREE.MeshBasicMaterial({ color: 0xFFA500 }); // Orange color
+const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+body.position.set(0, 1.25, 0); // Position the body above the ground
+zombieGroup.add(body);
+
+// Zombie head (dark green skin)
+const headGeometry = new THREE.BoxGeometry(0.75, 0.75, 0.75);
+const headMaterial = new THREE.MeshBasicMaterial({ color: 0x006400 }); // Dark green color
+const head = new THREE.Mesh(headGeometry, headMaterial);
+head.position.set(0, 2.25, 0); // Position the head above the body
+zombieGroup.add(head);
+
+// Zombie legs (brown pants)
+const legGeometry = new THREE.BoxGeometry(0.4, 0.75, 0.4);
+const legMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 }); // Brown color
+
+const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+leftLeg.position.set(-0.3, 0.375, 0); // Position the left leg
+zombieGroup.add(leftLeg);
+
+const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+rightLeg.position.set(0.3, 0.375, 0); // Position the right leg
+zombieGroup.add(rightLeg);
+
+// Position the zombie in front of the wall
+zombieGroup.position.set(0, 0, -7); // Adjust position as needed
+scene.add(zombieGroup);
+
 // Create bounding boxes for collision detection
 const wallBoundingBox = new THREE.Box3().setFromObject(wall);
 const playerBoundingBox = new THREE.Box3();
