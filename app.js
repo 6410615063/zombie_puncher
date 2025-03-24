@@ -188,6 +188,8 @@ const zombieAttackCooldown = 1.5; // Cooldown time between attacks (in seconds)
 
 const playerPunchRange = 1.5; // Slightly longer than the zombie's attack range
 
+let selectedSlot = 0; // Default to the fist (slot 0)
+
 // Event listeners for key press and release
 window.addEventListener('keydown', (event) => {
     switch (event.key) {
@@ -219,6 +221,17 @@ window.addEventListener('keydown', (event) => {
                 chargeStartTime = performance.now(); // Record the time when charging starts
             }
             break;
+    }
+});
+
+window.addEventListener('keydown', (event) => {
+    if (event.key >= '1' && event.key <= '9') {
+        // Select the corresponding inventory slot
+        const slotNumber = parseInt(event.key);
+        selectInventorySlot(slotNumber);
+    } else if (event.key === '0') {
+        // Use the fist (slot 0)
+        selectInventorySlot(0);
     }
 });
 
@@ -278,6 +291,25 @@ window.addEventListener('keyup', (event) => {
             break;
     }
 });
+
+function selectInventorySlot(slotNumber) {
+    // Deselect the currently selected slot
+    if (selectedSlot > 0) {
+        const previousSlot = document.getElementById(`slot-${selectedSlot}`);
+        previousSlot.classList.remove('selected');
+    }
+
+    // Update the selected slot
+    selectedSlot = slotNumber;
+
+    // Highlight the new slot if it's not the fist
+    if (selectedSlot > 0) {
+        const newSlot = document.getElementById(`slot-${selectedSlot}`);
+        newSlot.classList.add('selected');
+    }
+
+    console.log(`Selected slot: ${selectedSlot}`);
+}
 
 // Update the camera position to match the player's position
 function updateCameraPosition() {
