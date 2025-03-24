@@ -91,53 +91,41 @@ Step-by-Step Implementation plan
         Test: I will try it out
     20. add 2 more zombies next to the first one
         Test: I will play the game
-    21. add a durability system to weapon
-        - a weapon's durability goes down when you land an attack with it
+    
+    21. refractor the weapons system
+        - change the way weapons is implemented so that it is easier to add more weapons
+        - make fist count as a weapons
+        - when a weapon is picked up, it goes to the leftmost empty slot (from 1 to 9)
+        - add another baseball bat behind the wall, it has the same stats as the first baseball bat
+        Test: I will try to collect each bat in any order I want
+    22. refractor the inventory system
+        - put fist in slot 1 instead
+        - remove the 0 key's function
+    23. add a durability system to weapon
+        - a weapon's durability goes down when you land an attack with it (except for fist)
         - the weapon disappear when it ran out of durability
+        - add a durability bar below player health bar. It must display the durability of the selected weapon
         Test: I will play the game
-    21. try making a dungeon with rooms, then render it as a map on the wall
-        Test: I will look for it
-    22. change the grass field into a stone floor
-        Test: I will play the game
-    23. try making a room with an entrance
-        Test: I will look for it
-    24. add another room connected to that room
-        Test: I will look for it
-    25. add 2 more rooms, one with 2 baseball bats, another with 2 zombies
-        Test: I will look for it
-    26. get ready for actually making a dungeon floor by removing everything except for the player and the stone floor
-        - just remove them from the level for now. Dont actually remove the ability to create & render them
-        Test: I will look for it
-    27. create a room with the player inside
-        Test: I will play the game
-    28. create 2 rooms connect to the first
-        Test: I will play the game
-    29. create 2 more rooms, one with 2 baseball bats, another with 2 zombies
-        Test: I will play the game
-    30. add a score system
-        - gain score when killing zombie, scale with amount of floor decended
+    24. add a score system
+        - gain score when killing zombie
         - add a score display at the top right corner of the screen
         - show current score & high score at the game over screen
         Test: I will look for it
-    31. add 1 more room with a stair
-        Test: I will play the game
-    32. make the stair take the player to the next floor, also with 5 rooms
-        - the new floor also has weapons & zombies
-        - add a floor display at the top right of the screen
-        Test: I will play the game
-    33. now add a stair to the 2nd floor (if you havent add one)
-        Test: I will play the game
-    34. now make it so that every floors has a stair that lead to the next floor
-        - and make it so that every floor has weapons and zombies
-        Test: I will play the game
-    35. make it so that the deeper you decend the floor, the more zombies each floor will have
-        - make sure that there are enough weapons to kill all zombies
-        Test: I will play the game
-    36. add knockback when hitting zombies
-        - the more you charge an attack, the stronger the knockback
-        Test: I will play the game
-    37. add 2 more weapons
+    25. surround the grass field with wooden fences
+        - the fences should only be half as tall as the player
+        - the fences should prevent the player from leaving the grass field
+        Test: I will try to leave the grass field
+    26. spawn more zombies after every current zombies are dead
+        - increase the amount spawned with the current score
+        - spawn them far from the player enough that the player do not get attacked right away
+        Test: I will try to kill all zombies
+    27. add a crosshair at the center of the screen
+        - the crosshair should change color to orange when a zombie is within player's attack range, then change back
+        - the crosshair should change color to red if a zombie was hit by an attack, then change back
+        Test: I will try to play the game
+    28. add 2 more weapons
         - do more/less damage
         - more/less attack range
         - faster/slower attack speed
+        - put them behind the player
         Test: I will find & try them out
