@@ -496,6 +496,9 @@ function zombieAttack() {
             playerHealth -= 10; // Reduce player's health
             console.log(`Player hit by zombie! Health: ${playerHealth}`);
 
+            // Show the red overlay
+            showDamageOverlay();
+
             // Check if the player is dead
             if (playerHealth <= 0) {
                 console.log("Game Over! Player defeated.");
@@ -503,6 +506,15 @@ function zombieAttack() {
             }
         }
     }, attackDuration * 1000); // Apply damage at the end of the attack animation
+}
+
+// Function to show damage overlay
+function showDamageOverlay() {
+    const overlay = document.getElementById('damage-overlay');
+    overlay.style.opacity = 1; // Show the overlay
+    setTimeout(() => {
+        overlay.style.opacity = 0; // Hide the overlay after 1 second
+    }, 1000);
 }
 
 // Modify the animation loop to include player movement and camera updates

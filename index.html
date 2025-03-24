@@ -21,12 +21,25 @@
             height: 100%;
             background-color: #0f0; /* Green health bar */
         }
+
+        #damage-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 0, 0, 0.5); /* Semi-transparent red */
+            pointer-events: none; /* Allow clicks to pass through */
+            opacity: 0; /* Initially hidden */
+            transition: opacity 0.5s ease; /* Smooth fade-out */
+        }
     </style>
 </head>
 <body>
     <div id="player-health-container">
         <div id="player-health-bar"></div>
     </div>
+    <div id="damage-overlay"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="app.js"></script>
 </body>
