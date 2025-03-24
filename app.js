@@ -9,7 +9,7 @@ scene.background = new THREE.Color(0x87CEEB); // Light blue sky
 // Create a camera (PerspectiveCamera)
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 1.5, 10); // Position the camera slightly above the ground and behind the player
-camera.rotation.y = Math.PI; // Rotate the camera to face the negative Z direction (toward the wall)
+camera.rotation.y = 0; // Rotate the camera by 180 degrees to face the opposite direction
 
 // Create a WebGL renderer
 const renderer = new THREE.WebGLRenderer();
@@ -72,62 +72,6 @@ batCamera.rotation.z = Math.PI / 4; // Rotate the bat slightly for a natural loo
 batCamera.visible = false; // Initially hide the bat
 camera.add(batCamera); // Attach the bat to the camera
 
-// Create a zombie (composed of cubes)
-const zombieGroup = new THREE.Group(); // Group to hold all parts of the zombie
-
-// Zombie body (orange shirt)
-const bodyGeometry = new THREE.BoxGeometry(1, 1.5, 0.5);
-const bodyMaterial = new THREE.MeshBasicMaterial({ color: 0xFFA500 }); // Orange color
-const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-body.position.set(0, 1.25, 0); // Position the body above the ground
-zombieGroup.add(body);
-
-// Zombie head (dark green skin)
-const headGeometry = new THREE.BoxGeometry(0.75, 0.75, 0.75);
-const headMaterial = new THREE.MeshBasicMaterial({ color: 0x006400 }); // Dark green color
-const head = new THREE.Mesh(headGeometry, headMaterial);
-head.position.set(0, 2.25, 0); // Position the head above the body
-zombieGroup.add(head);
-
-// Zombie legs (brown pants)
-const legGeometry = new THREE.BoxGeometry(0.4, 0.75, 0.4);
-const legMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 }); // Brown color
-
-const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
-leftLeg.position.set(-0.3, 0.375, 0); // Position the left leg
-zombieGroup.add(leftLeg);
-
-const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
-rightLeg.position.set(0.3, 0.375, 0); // Position the right leg
-zombieGroup.add(rightLeg);
-
-// Zombie arms (dark green skin)
-const armGeometry = new THREE.BoxGeometry(0.3, 0.75, 0.3); // Width, height, depth
-const armMaterial = new THREE.MeshBasicMaterial({ color: 0x006400 }); // Dark green color
-
-// Left arm
-const leftArm = new THREE.Mesh(armGeometry, armMaterial);
-leftArm.position.set(-0.75, 1.5, 0); // Position the left arm
-leftArm.rotation.x = Math.PI / 2; // Rotate the arm to point forward
-zombieGroup.add(leftArm);
-
-// Right arm
-const rightArm = new THREE.Mesh(armGeometry, armMaterial);
-rightArm.position.set(0.75, 1.5, 0); // Position the right arm
-rightArm.rotation.x = Math.PI / 2; // Rotate the arm to point forward
-zombieGroup.add(rightArm);
-
-// Create a zombie health bar
-const zombieHealthBarGeometry = new THREE.PlaneGeometry(1, 0.1); // Width 1, height 0.1
-const zombieHealthBarMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green color
-const zombieHealthBar = new THREE.Mesh(zombieHealthBarGeometry, zombieHealthBarMaterial);
-zombieHealthBar.position.set(0, 3, 0); // Position above the zombie's head
-zombieGroup.add(zombieHealthBar); // Attach to the zombie group
-
-// Position the zombie in front of the wall
-zombieGroup.position.set(0, 0, -7); // Adjust position as needed
-scene.add(zombieGroup);
-
 // Create the baseball bat
 const baseballBatGroup = new THREE.Group(); // Group to hold all parts of the bat
 
@@ -156,7 +100,6 @@ scene.add(baseballBatGroup);
 // Create bounding boxes for collision detection
 const wallBoundingBox = new THREE.Box3().setFromObject(wall);
 const playerBoundingBox = new THREE.Box3();
-const zombieBoundingBox = new THREE.Box3();
 // Create a bounding box for the baseball bat
 const baseballBatBoundingBox = new THREE.Box3().setFromObject(baseballBatGroup);
 
@@ -192,11 +135,10 @@ let punchStartTime = 0;
 let isSwingingBat = false;
 let batSwingStartTime = 0;
 
-// Zombie health
-let zombieHealth = 100;
 
 // Player health
 let playerHealth = 100;
+let zombieHealth = 100;
 
 let isZombieAlive = true; // Flag to track if the zombie is alive
 
@@ -293,22 +235,8 @@ window.addEventListener('keyup', (event) => {
                     const damage = Math.min(chargeDuration * 10, 50); // Cap damage at 50
                     const knockback = Math.min(chargeDuration * 2, 10); // Cap knockback at 10
 
-                    // Check if the zombie is within punching range
-                    const distanceToZombie = zombieGroup.position.distanceTo(player.position);
-                    if (distanceToZombie <= playerPunchRange) {
-                        zombieHealth -= damage; // Apply damage to the zombie
-                        console.log(`Zombie hit! Damage: ${damage}, Zombie Health: ${zombieHealth}`);
-
-                        // Apply knockback to the zombie
-                        applyKnockbackToZombie(knockback);
-
-                        // Check if the zombie is dead
-                        if (zombieHealth <= 0) {
-                            handleZombieDeath(); // Call the centralized death handler
-                        }
-                    }
-
-                    console.log(`Fist attack released! Damage: ${damage}, Knockback: ${knockback}`);
+                    // Check collisions with all zombies
+                    checkZombieCollision(damage, knockback);
                 } else if (selectedSlot === 1) {
                     // Baseball bat attack logic
                     isSwingingBat = true;
@@ -320,22 +248,8 @@ window.addEventListener('keyup', (event) => {
                     const damage = Math.min(chargeDuration * 20, batDamage); // Cap damage at batDamage
                     const knockback = Math.min(chargeDuration * 3, 15); // Cap knockback at 15
 
-                    // Check if the zombie is within the bat's range
-                    const distanceToZombie = zombieGroup.position.distanceTo(player.position);
-                    if (distanceToZombie <= batRange) {
-                        zombieHealth -= damage; // Apply damage to the zombie
-                        console.log(`Zombie hit with bat! Damage: ${damage}, Zombie Health: ${zombieHealth}`);
-
-                        // Apply knockback to the zombie
-                        applyKnockbackToZombie(knockback);
-
-                        // Check if the zombie is dead
-                        if (zombieHealth <= 0) {
-                            handleZombieDeath(); // Call the centralized death handler
-                        }
-                    }
-
-                    console.log(`Bat attack released! Damage: ${damage}, Knockback: ${knockback}`);
+                    // Check collisions with all zombies
+                    checkZombieCollision(damage, knockback);
                 }
             }
             break;
@@ -425,69 +339,99 @@ function updateCameraRotation() {
     }
 }
 
-// Update zombie position in the animation loop
-function updateZombiePosition() {
-    if (!isZombieAlive) {
-        return; // Stop updating the zombie's position if it is dead
-    }
-
+// Helper function to move a zombie
+function moveZombie(zombie, boundingBox, health, updateHealthCallback) {
     // Update the zombie's bounding box
-    zombieBoundingBox.setFromObject(zombieGroup);
+    boundingBox.setFromObject(zombie);
 
-    // Check if the zombie is within attack range
-    const distanceToPlayer = zombieGroup.position.distanceTo(player.position);
+    // Check if the zombie is within attack range of the player
+    const distanceToPlayer = zombie.position.distanceTo(player.position);
     if (distanceToPlayer <= zombieAttackRange) {
         // Stop the zombie's movement and attack
-        zombieAttack();
+        zombieAttack(zombie, boundingBox);
         return;
     }
 
     // Save the zombie's current position
-    const previousPosition = zombieGroup.position.clone();
+    const previousPosition = zombie.position.clone();
 
     // Calculate the direction vector from the zombie to the player
     const direction = new THREE.Vector3();
-    direction.subVectors(player.position, zombieGroup.position).normalize();
+    direction.subVectors(player.position, zombie.position).normalize();
 
     // Move the zombie toward the player
-    zombieGroup.position.x += direction.x * zombieSpeed;
-    zombieGroup.position.z += direction.z * zombieSpeed;
+    zombie.position.x += direction.x * zombieSpeed;
+    zombie.position.z += direction.z * zombieSpeed;
 
     // Update the zombie's bounding box after moving
-    zombieBoundingBox.setFromObject(zombieGroup);
+    boundingBox.setFromObject(zombie);
 
     // Check for collision with the wall
-    if (zombieBoundingBox.intersectsBox(wallBoundingBox)) {
+    if (boundingBox.intersectsBox(wallBoundingBox)) {
         // If there's a collision with the wall, revert to the previous position
-        zombieGroup.position.copy(previousPosition);
+        zombie.position.copy(previousPosition);
     }
 
+    // Check for collisions with other zombies
+    zombieManager.zombies.forEach((otherZombie) => {
+        if (otherZombie.group !== zombie && boundingBox.intersectsBox(otherZombie.boundingBox)) {
+            // If there's a collision with another zombie, revert to the previous position
+            zombie.position.copy(previousPosition);
+        }
+    });
+
     // Make the zombie look at the player
-    zombieGroup.lookAt(player.position.x, zombieGroup.position.y, player.position.z);
+    zombie.lookAt(player.position.x, zombie.position.y, player.position.z);
+
+    // Update health if needed
+    updateHealthCallback(health);
 }
 
 // Function to apply knockback to the zombie
-function applyKnockbackToZombie(knockback) {
+function applyKnockbackToZombie(zombie, knockback) {
     // Calculate the direction vector from the player to the zombie
     const direction = new THREE.Vector3();
-    direction.subVectors(zombieGroup.position, player.position).normalize();
+    direction.subVectors(zombie.position, player.position).normalize();
 
-    // Apply knockback to the zombie's position
-    zombieGroup.position.x += direction.x * knockback;
-    zombieGroup.position.z += direction.z * knockback;
+    // Save the zombie's current position
+    const originalPosition = zombie.position.clone();
 
-    // Reduce the zombie's health
-    const damage = Math.min((performance.now() - chargeStartTime) / 100, 50); // Damage based on charge duration
-    zombieHealth -= damage;
+    // Incrementally move the zombie along the knockback direction
+    const stepSize = 0.1; // Small step size for collision checking
+    let distanceMoved = 0;
 
-    console.log(`Zombie Health: ${zombieHealth}`);
+    while (distanceMoved < knockback) {
+        // Move the zombie by a small step
+        zombie.position.x += direction.x * stepSize;
+        zombie.position.z += direction.z * stepSize;
+        distanceMoved += stepSize;
 
-    // Check if the zombie is dead
-    if (zombieHealth <= 0) {
-        handleZombieDeath(); // Call the centralized death handler
-    } else {
         // Update the zombie's bounding box
-        zombieBoundingBox.setFromObject(zombieGroup);
+        const boundingBox = new THREE.Box3().setFromObject(zombie);
+
+        // Check for collisions with walls
+        if (boundingBox.intersectsBox(wallBoundingBox)) {
+            // Revert to the last valid position and stop knockback
+            zombie.position.copy(originalPosition);
+            break;
+        }
+
+        // Check for collisions with other zombies
+        let collidedWithOtherZombie = false;
+        zombieManager.zombies.forEach((otherZombie) => {
+            if (otherZombie.group !== zombie && boundingBox.intersectsBox(otherZombie.boundingBox)) {
+                collidedWithOtherZombie = true;
+            }
+        });
+
+        if (collidedWithOtherZombie) {
+            // Revert to the last valid position and stop knockback
+            zombie.position.copy(originalPosition);
+            break;
+        }
+
+        // Update the original position to the current position
+        originalPosition.copy(zombie.position);
     }
 }
 
@@ -571,28 +515,34 @@ function updateHealthBars() {
     const playerHealthPercentage = Math.max(playerHealth / 100, 0); // Ensure it doesn't go below 0
     playerHealthBar.style.width = `${playerHealthPercentage * 100}%`;
 
-    // Update zombie's health bar
-    const zombieHealthPercentage = Math.max(zombieHealth / 100, 0); // Ensure it doesn't go below 0
-    zombieHealthBar.scale.x = zombieHealthPercentage; // Scale the health bar horizontally
-    zombieHealthBar.material.color.set(zombieHealthPercentage > 0.5 ? 0x00ff00 : 0xff0000); // Green if >50%, red otherwise
+    // Update each zombie's health bar
+    zombieManager.zombies.forEach((zombie) => {
+        const healthPercentage = Math.max(zombie.health / 100, 0); // Ensure it doesn't go below 0
+        zombie.group.children.forEach((child) => {
+            if (child.geometry instanceof THREE.PlaneGeometry) {
+                // Scale the health bar horizontally
+                child.scale.x = healthPercentage;
+
+                // Update the health bar color (green if >50%, red otherwise)
+                child.material.color.set(healthPercentage > 0.5 ? 0x00ff00 : 0xff0000);
+            }
+        });
+    });
 }
 
 // Function to handle zombie death
-function handleZombieDeath() {
+function handleZombieDeath(zombie, boundingBox) {
     // Replace the zombie with a "corpse"
     const corpseMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 }); // Brown color for the corpse
     const corpse = new THREE.Mesh(new THREE.BoxGeometry(1, 0.5, 1), corpseMaterial);
-    corpse.position.copy(zombieGroup.position); // Place the corpse where the zombie died
+    corpse.position.copy(zombie.position); // Place the corpse where the zombie died
     scene.add(corpse);
 
     // Remove the zombie from the scene
-    scene.remove(zombieGroup);
+    scene.remove(zombie);
 
     // Reset the zombie's bounding box to prevent further collisions
-    zombieBoundingBox.makeEmpty(); // Clear the bounding box
-
-    // Mark the zombie as dead
-    isZombieAlive = false;
+    boundingBox.makeEmpty(); // Clear the bounding box
 
     console.log("Zombie defeated! A corpse has been left behind.");
 }
@@ -618,7 +568,7 @@ function displayGameOverScreen() {
 }
 
 // Function to handle zombie attack
-function zombieAttack() {
+function zombieAttack(zombie, boundingBox) {
     if (!isZombieAlive || isZombieAttacking) {
         return; // Stop the attack if the zombie is dead or already attacking
     }
@@ -639,12 +589,12 @@ function zombieAttack() {
 
         if (elapsedTime < attackDuration / 2) {
             // Move the arms forward
-            leftArm.position.z -= 0.05;
-            rightArm.position.z -= 0.05;
+            zombie.children[3].position.z -= 0.05; // Left arm
+            zombie.children[4].position.z -= 0.05; // Right arm
         } else if (elapsedTime < attackDuration) {
             // Move the arms back
-            leftArm.position.z += 0.05;
-            rightArm.position.z += 0.05;
+            zombie.children[3].position.z += 0.05;
+            zombie.children[4].position.z += 0.05;
         } else {
             // End the attack animation
             clearInterval(attackInterval);
@@ -654,11 +604,7 @@ function zombieAttack() {
 
     // Apply damage to the player
     setTimeout(() => {
-        if (!isZombieAlive) {
-            return; // Stop applying damage if the zombie dies
-        }
-
-        if (playerBoundingBox.intersectsBox(zombieBoundingBox)) {
+        if (playerBoundingBox.intersectsBox(boundingBox)) {
             playerHealth -= 10; // Reduce player's health by 10
             console.log(`Player hit by zombie! Health: ${playerHealth}`);
 
@@ -715,8 +661,8 @@ function animate() {
     // Update camera rotation
     updateCameraRotation();
 
-    // Update zombie position
-    updateZombiePosition();
+    // Update zombies
+    zombieManager.updateZombies();
 
     // Update the fist during charging
     updateFistDuringCharging();
@@ -744,6 +690,187 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 });
+
+function checkZombieCollision(damage, knockback) {
+    // Iterate through all zombies in the ZombieManager
+    zombieManager.zombies.forEach((zombie, index) => {
+        if (zombie.health > 0 && playerBoundingBox.intersectsBox(zombie.boundingBox)) {
+            // Apply damage to the zombie
+            zombie.health -= damage;
+            console.log(`Zombie ${index + 1} hit! Damage: ${damage}, Health: ${zombie.health}`);
+
+            // Apply knockback to the zombie
+            applyKnockbackToZombie(zombie.group, knockback);
+
+            // Check if the zombie is dead
+            if (zombie.health <= 0) {
+                zombieManager.handleZombieDeath(index);
+            }
+        }
+    });
+}
+
+class ZombieManager {
+    constructor() {
+        this.zombies = []; // Array to store all zombies
+    }
+
+    // Add a new zombie
+    addZombie(position) {
+        const zombieGroup = new THREE.Group();
+
+        // Generate a random color for the zombie's shirt
+        const randomShirtColor = Math.floor(Math.random() * 0xffffff); // Generate a random hex color
+
+        // Zombie body (shirt)
+        const bodyGeometry = new THREE.BoxGeometry(1, 1.5, 0.5);
+        const bodyMaterial = new THREE.MeshBasicMaterial({ color: randomShirtColor }); // Use the random color
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.position.set(0, 1.25, 0);
+        zombieGroup.add(body);
+
+        // Zombie head (dark green skin)
+        const headGeometry = new THREE.BoxGeometry(0.75, 0.75, 0.75);
+        const headMaterial = new THREE.MeshBasicMaterial({ color: 0x006400 });
+        const head = new THREE.Mesh(headGeometry, headMaterial);
+        head.position.set(0, 2.25, 0);
+        zombieGroup.add(head);
+
+        // Zombie legs (brown pants)
+        const legGeometry = new THREE.BoxGeometry(0.4, 0.75, 0.4);
+        const legMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
+        const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+        leftLeg.position.set(-0.3, 0.375, 0);
+        zombieGroup.add(leftLeg);
+
+        const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+        rightLeg.position.set(0.3, 0.375, 0);
+        zombieGroup.add(rightLeg);
+
+        // Zombie arms (dark green skin)
+        const armGeometry = new THREE.BoxGeometry(0.3, 0.75, 0.3);
+        const armMaterial = new THREE.MeshBasicMaterial({ color: 0x006400 });
+        const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+        leftArm.position.set(-0.75, 1.5, 0);
+        leftArm.rotation.x = Math.PI / 2;
+        zombieGroup.add(leftArm);
+
+        const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+        rightArm.position.set(0.75, 1.5, 0);
+        rightArm.rotation.x = Math.PI / 2;
+        zombieGroup.add(rightArm);
+
+        // Create a zombie health bar
+        const zombieHealthBarGeometry = new THREE.PlaneGeometry(1, 0.1);
+        const zombieHealthBarMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const zombieHealthBar = new THREE.Mesh(zombieHealthBarGeometry, zombieHealthBarMaterial);
+        zombieHealthBar.position.set(0, 3, 0);
+        zombieGroup.add(zombieHealthBar);
+
+        // Position the zombie
+        zombieGroup.position.copy(position);
+        scene.add(zombieGroup);
+
+        // Add the zombie to the array
+        this.zombies.push({
+            group: zombieGroup,
+            health: 100,
+            boundingBox: new THREE.Box3().setFromObject(zombieGroup),
+        });
+    }
+
+    // Update all zombies
+    updateZombies() {
+        this.zombies.forEach((zombie, index) => {
+            if (zombie.health > 0) {
+                // Move the zombie
+                moveZombie(zombie.group, zombie.boundingBox, zombie.health, (health) => {
+                    zombie.health = health;
+                });
+
+                // Update the zombie's health bar
+                const healthPercentage = Math.max(zombie.health / 100, 0); // Ensure it doesn't go below 0
+                zombie.group.children.forEach((child) => {
+                    if (child.geometry instanceof THREE.PlaneGeometry) {
+                        // Scale the health bar horizontally
+                        child.scale.x = healthPercentage;
+
+                        // Update the health bar color (green if >50%, red otherwise)
+                        child.material.color.set(healthPercentage > 0.5 ? 0x00ff00 : 0xff0000);
+                    }
+                });
+            } else {
+                // Remove dead zombies from the array
+                this.handleZombieDeath(index);
+            }
+        });
+    }
+
+    // Handle zombie death
+    handleZombieDeath(index) {
+        const zombie = this.zombies[index];
+
+        // Replace the zombie with a "corpse"
+        const corpseMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
+        const corpse = new THREE.Mesh(new THREE.BoxGeometry(1, 0.5, 1), corpseMaterial);
+        corpse.position.copy(zombie.group.position);
+        scene.add(corpse);
+
+        // Remove the zombie from the scene
+        scene.remove(zombie.group);
+
+        // Remove the zombie from the array
+        this.zombies.splice(index, 1);
+
+        console.log("Zombie defeated! A corpse has been left behind.");
+    }
+}
+
+// Update the zombie position function to use the ZombieManager
+function updateZombiePosition() {
+    zombieManager.updateZombies();
+}
+
+// Initialize the ZombieManager
+const zombieManager = new ZombieManager();
+
+// Add initial zombies
+zombieManager.addZombie(new THREE.Vector3(0, 0, -7)); // First zombie
+zombieManager.addZombie(new THREE.Vector3(-3, 0, -7)); // Second zombie
+zombieManager.addZombie(new THREE.Vector3(3, 0, -7)); // Third zombie
+
+// Modify the animation loop to include player movement and camera updates
+function animate() {
+    animationId = requestAnimationFrame(animate);
+
+    // Update player position
+    updatePlayerPosition();
+
+    // Update camera rotation
+    updateCameraRotation();
+
+    // Update zombies
+    zombieManager.updateZombies();
+
+    // Update the fist during charging
+    updateFistDuringCharging();
+
+    // Update the bat during charging and swinging
+    updateBatDuringCharging();
+
+    // Check for collision with the baseball bat
+    if (baseballBatBoundingBox.intersectsBox(playerBoundingBox)) {
+        pickUpBaseballBat();
+    }
+
+    // Update health bars
+    updateHealthBars();
+
+    // Update camera position after all changes
+    updateCameraPosition();
+
+    renderer.render(scene, camera);
+}
 
 // Start animation
 animate();
