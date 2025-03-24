@@ -90,6 +90,13 @@ const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
 rightLeg.position.set(0.3, 0.375, 0); // Position the right leg
 zombieGroup.add(rightLeg);
 
+// Create a zombie health bar
+const zombieHealthBarGeometry = new THREE.PlaneGeometry(1, 0.1); // Width 1, height 0.1
+const zombieHealthBarMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green color
+const zombieHealthBar = new THREE.Mesh(zombieHealthBarGeometry, zombieHealthBarMaterial);
+zombieHealthBar.position.set(0, 3, 0); // Position above the zombie's head
+zombieGroup.add(zombieHealthBar); // Attach to the zombie group
+
 // Position the zombie in front of the wall
 zombieGroup.position.set(0, 0, -7); // Adjust position as needed
 scene.add(zombieGroup);
@@ -373,6 +380,19 @@ function updateFistDuringCharging() {
     }
 }
 
+// Function to update health bars
+function updateHealthBars() {
+    // Update player's health bar
+    const playerHealthBar = document.getElementById('player-health-bar');
+    const playerHealthPercentage = Math.max(playerHealth / 100, 0); // Ensure it doesn't go below 0
+    playerHealthBar.style.width = `${playerHealthPercentage * 100}%`;
+
+    // Update zombie's health bar
+    const zombieHealthPercentage = Math.max(zombieHealth / 100, 0); // Ensure it doesn't go below 0
+    zombieHealthBar.scale.x = zombieHealthPercentage; // Scale the health bar horizontally
+    zombieHealthBar.material.color.set(zombieHealthPercentage > 0.5 ? 0x00ff00 : 0xff0000); // Green if >50%, red otherwise
+}
+
 // Modify the animation loop to include player movement and camera updates
 function animate() {
     requestAnimationFrame(animate);
@@ -388,6 +408,9 @@ function animate() {
 
     // Update the fist during charging
     updateFistDuringCharging();
+
+    // Update health bars
+    updateHealthBars();
 
     // Update camera position after all changes
     updateCameraPosition();
