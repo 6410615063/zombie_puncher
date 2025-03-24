@@ -52,8 +52,8 @@ fist.position.set(0.75, 0, 0.75); // Position the fist relative to the player
 player.add(fist); // Attach the fist to the player
 
 // Create a fist (visible in the camera view)
-const fistGeometryCamera = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-const fistMaterialCamera = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red color for the fist
+const fistGeometryCamera = new THREE.SphereGeometry(0.25, 32, 32); // Sphere with radius 0.25
+const fistMaterialCamera = new THREE.MeshBasicMaterial({ color: 0xf1c27d }); // Light brown color for the fist
 const fistCamera = new THREE.Mesh(fistGeometryCamera, fistMaterialCamera);
 
 // Position the fist in front of the camera
@@ -121,6 +121,10 @@ const zombieSpeed = 0.05; // Slower than the player
 let isCharging = false;
 let chargeStartTime = 0;
 
+// Variables for fist animation
+let isPunching = false;
+let punchStartTime = 0;
+
 // Zombie health
 let zombieHealth = 100;
 
@@ -155,7 +159,7 @@ window.addEventListener('keydown', (event) => {
             cameraRotation.right = true;
             break;
         case ' ':
-            if (!isCharging) {
+            if (!isCharging && !isPunching) {
                 isCharging = true;
                 chargeStartTime = performance.now(); // Record the time when charging starts
             }
@@ -190,6 +194,9 @@ window.addEventListener('keyup', (event) => {
         case ' ':
             if (isCharging) {
                 isCharging = false;
+                isPunching = true;
+                punchStartTime = performance.now(); // Record the time when punching starts
+
                 const chargeDuration = (performance.now() - chargeStartTime) / 1000; // Calculate charge duration in seconds
 
                 // Calculate damage and knockback based on charge duration
@@ -327,17 +334,42 @@ function applyKnockbackToZombie(knockback) {
     }
 }
 
-// Function to update the fist during charging
+// Function to update the fist during charging and punching
 function updateFistDuringCharging() {
     if (isCharging) {
-        const chargeDuration = (performance.now() - chargeStartTime) / 1000; // Calculate charge duration in seconds
-        const scale = Math.min(1 + chargeDuration, 2); // Scale the fist up to 2x size
+        const chargeDuration = (performance.now() - chargeStartTime) / 2000; // Normalize charge duration (2 seconds to reach max charge)
+        const scale = Math.min(1 + chargeDuration, 2); // Scale the fist up to 2x size, slower growth
+
+        // Make the fist shake slightly when fully charged
+        if (chargeDuration >= 1) {
+            const shakeAmount = 0.05 * Math.sin(performance.now() * 10); // Small oscillation
+            fistCamera.position.x = 0.5 + shakeAmount; // Add shake to the x position
+        } else {
+            fistCamera.position.x = 0.5; // Reset x position if not fully charged
+        }
 
         // Scale the fist
         fistCamera.scale.set(scale, scale, scale);
+    } else if (isPunching) {
+        // Handle punching animation
+        const punchDuration = (performance.now() - punchStartTime) / 1000;
+
+        if (punchDuration < 0.2) {
+            // Launch the fist forward
+            fistCamera.position.set(0.5, -0.5, -2);
+        } else if (punchDuration < 0.4) {
+            // Retract the fist back
+            fistCamera.position.set(0.5, -0.5, -1);
+        } else {
+            // End punching animation
+            isPunching = false;
+            fistCamera.scale.set(1, 1, 1);
+            fistCamera.position.set(0.5, -0.5, -1);
+        }
     } else {
-        // Reset the fist's scale after the attack
+        // Reset the fist's scale and position after the attack
         fistCamera.scale.set(1, 1, 1);
+        fistCamera.position.set(0.5, -0.5, -1);
     }
 }
 
