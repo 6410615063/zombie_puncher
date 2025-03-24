@@ -151,6 +151,24 @@ const playerPunchRange = 1.5; // Slightly longer than the zombie's attack range
 
 let selectedSlot = 0; // Default to the fist (slot 0)
 
+// Initialize the inventory with the fist in slot 1
+const inventory = [
+    null, // Slot 0 is unused
+    { name: "Fist", damage: 10, range: 1.5, durability: Infinity }, // Slot 1: Fist
+    null, // Slot 2: Empty (for the baseball bat or other weapons)
+];
+
+// Set the default selected slot to 1 (fist)
+selectedSlot = 1;
+
+// Update the inventory UI for the fist
+const fistSlot = document.getElementById('slot-1');
+fistSlot.innerText = "Fist";
+fistSlot.style.color = "white";
+fistSlot.style.fontSize = "14px";
+fistSlot.style.textAlign = "center";
+fistSlot.style.lineHeight = "50px";
+
 // Event listeners for key press and release
 window.addEventListener('keydown', (event) => {
     switch (event.key) {
@@ -193,6 +211,14 @@ window.addEventListener('keydown', (event) => {
     } else if (event.key === '0') {
         // Use the fist (slot 0)
         selectInventorySlot(0);
+    }
+});
+
+window.addEventListener('keydown', (event) => {
+    if (event.key >= '1' && event.key <= '9') {
+        // Select the corresponding inventory slot
+        const slotNumber = parseInt(event.key);
+        selectInventorySlot(slotNumber);
     }
 });
 
@@ -266,18 +292,16 @@ function selectInventorySlot(slotNumber) {
     // Update the selected slot
     selectedSlot = slotNumber;
 
-    // Highlight the new slot if it's not the fist
-    if (selectedSlot > 0) {
-        const newSlot = document.getElementById(`slot-${selectedSlot}`);
-        newSlot.classList.add('selected');
-    }
+    // Highlight the new slot
+    const newSlot = document.getElementById(`slot-${selectedSlot}`);
+    newSlot.classList.add('selected');
 
-    // Toggle between fist and bat models
-    if (selectedSlot === 0) {
-        // Show the fist and hide the bat
+    // Toggle between fist and other weapons
+    if (selectedSlot === 1) {
+        // Show the fist and hide other weapons
         fistCamera.visible = true;
         batCamera.visible = false;
-    } else if (selectedSlot === 1) {
+    } else if (selectedSlot === 2) {
         // Show the bat and hide the fist
         fistCamera.visible = false;
         batCamera.visible = true;
