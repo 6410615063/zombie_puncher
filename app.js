@@ -90,6 +90,22 @@ const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
 rightLeg.position.set(0.3, 0.375, 0); // Position the right leg
 zombieGroup.add(rightLeg);
 
+// Zombie arms (dark green skin)
+const armGeometry = new THREE.BoxGeometry(0.3, 0.75, 0.3); // Width, height, depth
+const armMaterial = new THREE.MeshBasicMaterial({ color: 0x006400 }); // Dark green color
+
+// Left arm
+const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+leftArm.position.set(-0.75, 1.5, 0); // Position the left arm
+leftArm.rotation.x = Math.PI / 2; // Rotate the arm to point forward
+zombieGroup.add(leftArm);
+
+// Right arm
+const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+rightArm.position.set(0.75, 1.5, 0); // Position the right arm
+rightArm.rotation.x = Math.PI / 2; // Rotate the arm to point forward
+zombieGroup.add(rightArm);
+
 // Create a zombie health bar
 const zombieHealthBarGeometry = new THREE.PlaneGeometry(1, 0.1); // Width 1, height 0.1
 const zombieHealthBarMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green color
@@ -139,6 +155,11 @@ let zombieHealth = 100;
 let playerHealth = 100;
 
 let isZombieAlive = true; // Flag to track if the zombie is alive
+
+let isZombieAttacking = false;
+let zombieAttackStartTime = 0;
+const zombieAttackRange = 1.0; // Increased attack range
+const zombieAttackCooldown = 1.5; // Cooldown time between attacks (in seconds)
 
 // Event listeners for key press and release
 window.addEventListener('keydown', (event) => {
@@ -255,22 +276,8 @@ function updatePlayerPosition() {
         player.position.copy(previousPosition);
     }
 
-    // Check for collision with the zombie
-    if (isZombieAlive && playerBoundingBox.intersectsBox(zombieBoundingBox)) {
-        // If there's a collision with the zombie, revert to the previous position
-        player.position.copy(previousPosition);
-
-        // Reduce the player's health
-        playerHealth -= 1; // Reduce health gradually on collision
-        console.log(`Player Health: ${playerHealth}`);
-
-        // Check if the player is dead
-        if (playerHealth <= 0) {
-            console.log("Game Over! Player defeated.");
-            // Stop the game loop
-            return;
-        }
-    }
+    // Remove the logic for zombie collision damage
+    // The zombie will now only damage the player through its attack animation
 
     // Update the camera position after moving the player
     updateCameraPosition();
@@ -288,14 +295,23 @@ function updateCameraRotation() {
 
 // Update zombie position in the animation loop
 function updateZombiePosition() {
+    if (!isZombieAlive) {
+        return; // Stop updating the zombie's position if it is dead
+    }
+
     // Update the zombie's bounding box
     zombieBoundingBox.setFromObject(zombieGroup);
 
-    // Check for collision with the player
-    if (zombieBoundingBox.intersectsBox(playerBoundingBox)) {
-        // If there's a collision, stop the zombie's movement
+    // Check if the zombie is within attack range
+    const distanceToPlayer = zombieGroup.position.distanceTo(player.position);
+    if (distanceToPlayer <= zombieAttackRange) {
+        // Stop the zombie's movement and attack
+        zombieAttack();
         return;
     }
+
+    // Save the zombie's current position
+    const previousPosition = zombieGroup.position.clone();
 
     // Calculate the direction vector from the zombie to the player
     const direction = new THREE.Vector3();
@@ -304,6 +320,15 @@ function updateZombiePosition() {
     // Move the zombie toward the player
     zombieGroup.position.x += direction.x * zombieSpeed;
     zombieGroup.position.z += direction.z * zombieSpeed;
+
+    // Update the zombie's bounding box after moving
+    zombieBoundingBox.setFromObject(zombieGroup);
+
+    // Check for collision with the wall
+    if (zombieBoundingBox.intersectsBox(wallBoundingBox)) {
+        // If there's a collision with the wall, revert to the previous position
+        zombieGroup.position.copy(previousPosition);
+    }
 
     // Make the zombie look at the player
     zombieGroup.lookAt(player.position.x, zombieGroup.position.y, player.position.z);
@@ -386,46 +411,6 @@ function updateHealthBars() {
     zombieHealthBar.material.color.set(zombieHealthPercentage > 0.5 ? 0x00ff00 : 0xff0000); // Green if >50%, red otherwise
 }
 
-// Create a red tile (plane)
-const redTileGeometry = new THREE.PlaneGeometry(2, 2); // Width and height of the tile
-const redTileMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red color
-const redTile = new THREE.Mesh(redTileGeometry, redTileMaterial);
-redTile.rotation.x = -Math.PI / 2; // Rotate to make it horizontal
-redTile.position.set(0, 0.01, 2); // Position behind the player (slightly above the grass to avoid z-fighting)
-scene.add(redTile); // Add the red tile to the scene
-
-// Create a bounding box for the red tile
-const redTileBoundingBox = new THREE.Box3().setFromObject(redTile);
-
-function checkRedTileCollision() {
-    // Update bounding boxes
-    playerBoundingBox.setFromObject(player);
-    zombieBoundingBox.setFromObject(zombieGroup);
-
-    // Check if the player steps on the red tile
-    if (playerBoundingBox.intersectsBox(redTileBoundingBox)) {
-        playerHealth -= 1; // Reduce player's health
-        console.log(`Player stepped on the red tile! Health: ${playerHealth}`);
-
-        // Check if the player is dead
-        if (playerHealth <= 0) {
-            console.log("Game Over! Player defeated.");
-            displayGameOverScreen();
-        }
-    }
-
-    // Check if the zombie steps on the red tile
-    if (zombieBoundingBox.intersectsBox(redTileBoundingBox)) {
-        zombieHealth -= 1; // Reduce zombie's health
-        console.log(`Zombie stepped on the red tile! Health: ${zombieHealth}`);
-
-        // Check if the zombie is dead
-        if (zombieHealth <= 0) {
-            handleZombieDeath(); // Call the centralized death handler
-        }
-    }
-}
-
 // Function to handle zombie death
 function handleZombieDeath() {
     // Replace the zombie with a "corpse"
@@ -436,6 +421,9 @@ function handleZombieDeath() {
 
     // Remove the zombie from the scene
     scene.remove(zombieGroup);
+
+    // Reset the zombie's bounding box to prevent further collisions
+    zombieBoundingBox.makeEmpty(); // Clear the bounding box
 
     // Mark the zombie as dead
     isZombieAlive = false;
@@ -463,6 +451,60 @@ function displayGameOverScreen() {
     document.body.appendChild(gameOverOverlay);
 }
 
+// Function to handle zombie attack
+function zombieAttack() {
+    if (!isZombieAlive || isZombieAttacking) {
+        return; // Stop the attack if the zombie is dead or already attacking
+    }
+
+    isZombieAttacking = true;
+    zombieAttackStartTime = performance.now();
+
+    // Animate the zombie's arms (simulate a punch)
+    const attackDuration = 0.5; // Duration of the attack animation (in seconds)
+
+    const attackInterval = setInterval(() => {
+        if (!isZombieAlive) {
+            clearInterval(attackInterval); // Stop the attack animation if the zombie dies
+            return;
+        }
+
+        const elapsedTime = (performance.now() - zombieAttackStartTime) / 1000;
+
+        if (elapsedTime < attackDuration / 2) {
+            // Move the arms forward
+            leftArm.position.z -= 0.05;
+            rightArm.position.z -= 0.05;
+        } else if (elapsedTime < attackDuration) {
+            // Move the arms back
+            leftArm.position.z += 0.05;
+            rightArm.position.z += 0.05;
+        } else {
+            // End the attack animation
+            clearInterval(attackInterval);
+            isZombieAttacking = false;
+        }
+    }, 16); // Run every 16ms (~60 FPS)
+
+    // Apply damage to the player
+    setTimeout(() => {
+        if (!isZombieAlive) {
+            return; // Stop applying damage if the zombie dies
+        }
+
+        if (playerBoundingBox.intersectsBox(zombieBoundingBox)) {
+            playerHealth -= 10; // Reduce player's health
+            console.log(`Player hit by zombie! Health: ${playerHealth}`);
+
+            // Check if the player is dead
+            if (playerHealth <= 0) {
+                console.log("Game Over! Player defeated.");
+                displayGameOverScreen();
+            }
+        }
+    }, attackDuration * 1000); // Apply damage at the end of the attack animation
+}
+
 // Modify the animation loop to include player movement and camera updates
 function animate() {
     animationId = requestAnimationFrame(animate);
@@ -478,9 +520,6 @@ function animate() {
 
     // Update the fist during charging
     updateFistDuringCharging();
-
-    // Check for collisions with the red tile
-    checkRedTileCollision();
 
     // Update health bars
     updateHealthBars();
