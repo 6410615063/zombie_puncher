@@ -169,6 +169,24 @@ fistSlot.style.fontSize = "14px";
 fistSlot.style.textAlign = "center";
 fistSlot.style.lineHeight = "50px";
 
+let currentScore = 0;
+let highScore = 0;
+
+// Create a score display
+const scoreDisplay = document.createElement('div');
+scoreDisplay.style.position = 'absolute';
+scoreDisplay.style.top = '10px';
+scoreDisplay.style.right = '10px';
+scoreDisplay.style.fontSize = '24px';
+scoreDisplay.style.color = 'white';
+scoreDisplay.innerText = `Score: ${currentScore}`;
+document.body.appendChild(scoreDisplay);
+
+// Function to update the score display
+function updateScoreDisplay() {
+    scoreDisplay.innerText = `Score: ${currentScore}`;
+}
+
 // Event listeners for key press and release
 window.addEventListener('keydown', (event) => {
     switch (event.key) {
@@ -576,8 +594,14 @@ function displayGameOverScreen() {
     // Stop the game loop
     cancelAnimationFrame(animationId);
 
+    // Update the high score
+    if (currentScore > highScore) {
+        highScore = currentScore;
+    }
+
     // Create a "Game Over" overlay
     const gameOverOverlay = document.createElement('div');
+    gameOverOverlay.id = 'game-over-overlay'; // Add a unique ID
     gameOverOverlay.style.position = 'absolute';
     gameOverOverlay.style.top = '50%';
     gameOverOverlay.style.left = '50%';
@@ -587,25 +611,40 @@ function displayGameOverScreen() {
     gameOverOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
     gameOverOverlay.style.padding = '20px';
     gameOverOverlay.style.borderRadius = '10px';
-    gameOverOverlay.innerText = 'Game Over';
+    gameOverOverlay.innerHTML = `
+        <div>Game Over</div>
+        <div>Score: ${currentScore}</div>
+        <div>High Score: ${highScore}</div>
+        <div>Press Enter to Restart</div>
+    `;
     document.body.appendChild(gameOverOverlay);
+
+    // Add an event listener for the Enter key to restart the game
+    window.addEventListener('keydown', handleRestartKey);
+}
+
+function handleRestartKey(event) {
+    if (event.key === 'Enter') {
+        window.removeEventListener('keydown', handleRestartKey); // Remove the listener to avoid duplicates
+        restartGame();
+    }
 }
 
 // Function to handle zombie attack
 function zombieAttack(zombie, boundingBox) {
     if (!isZombieAlive || isZombieAttacking) {
-        return; // Stop the attack if the zombie is dead or already attacking
+        console.log("Zombie is already attacking or dead.");
+        return;
     }
 
+    console.log("Zombie started attacking!");
     isZombieAttacking = true;
     zombieAttackStartTime = performance.now();
-
-    // Animate the zombie's arms (simulate a punch)
-    const attackDuration = 0.5; // Duration of the attack animation (in seconds)
 
     const attackInterval = setInterval(() => {
         // Check if the zombie is still alive
         if (!zombieManager.zombies.some((z) => z.group === zombie)) {
+            console.log("Zombie died during attack. Stopping animation.");
             clearInterval(attackInterval); // Stop the attack animation if the zombie dies
             isZombieAttacking = false;
             return;
@@ -615,14 +654,17 @@ function zombieAttack(zombie, boundingBox) {
 
         if (elapsedTime < attackDuration / 2) {
             // Move the arms forward
+            console.log("Zombie arms moving forward.");
             zombie.children[3].position.z -= 0.05; // Left arm
             zombie.children[4].position.z -= 0.05; // Right arm
         } else if (elapsedTime < attackDuration) {
             // Move the arms back
+            console.log("Zombie arms moving back.");
             zombie.children[3].position.z += 0.05;
             zombie.children[4].position.z += 0.05;
         } else {
             // End the attack animation
+            console.log("Zombie attack animation ended.");
             clearInterval(attackInterval);
             isZombieAttacking = false;
         }
@@ -632,6 +674,7 @@ function zombieAttack(zombie, boundingBox) {
     setTimeout(() => {
         // Check if the zombie is still alive before applying damage
         if (!zombieManager.zombies.some((z) => z.group === zombie)) {
+            console.log("Zombie died before applying damage.");
             return; // Stop if the zombie is dead
         }
 
@@ -819,6 +862,12 @@ class ZombieManager {
                     zombie.health = health;
                 });
 
+                // Check if the zombie is within attack range of the player
+                const distanceToPlayer = zombie.group.position.distanceTo(player.position);
+                if (distanceToPlayer <= zombieAttackRange && !isZombieAttacking) {
+                    zombieAttack(zombie.group, zombie.boundingBox);
+                }
+
                 // Update the zombie's health bar
                 const healthPercentage = Math.max(zombie.health / 100, 0); // Ensure it doesn't go below 0
                 zombie.group.children.forEach((child) => {
@@ -853,6 +902,10 @@ class ZombieManager {
         // Remove the zombie from the array
         this.zombies.splice(index, 1);
 
+        // Increment the score
+        currentScore += 10; // Example: Gain 10 points per zombie
+        updateScoreDisplay();
+
         console.log("Zombie defeated! A corpse has been left behind.");
     }
 }
@@ -869,6 +922,8 @@ const zombieManager = new ZombieManager();
 zombieManager.addZombie(new THREE.Vector3(0, 0, -7)); // First zombie
 zombieManager.addZombie(new THREE.Vector3(-3, 0, -7)); // Second zombie
 zombieManager.addZombie(new THREE.Vector3(3, 0, -7)); // Third zombie
+
+const attackDuration = 1.0; // Duration of the zombie attack animation in seconds
 
 // Modify the animation loop to include player movement and camera updates
 function animate() {
@@ -905,3 +960,36 @@ function animate() {
 
 // Start animation
 animate();
+
+function restartGame() {
+    console.log("Restarting game...");
+
+    // Remove the game over screen
+    const gameOverOverlay = document.getElementById('game-over-overlay');
+    if (gameOverOverlay) {
+        gameOverOverlay.remove();
+    }
+
+    // Reset player health
+    playerHealth = 100;
+
+    // Reset score
+    currentScore = 0;
+    updateScoreDisplay();
+
+    // Reset zombies
+    zombieManager.zombies.forEach((zombie) => {
+        scene.remove(zombie.group);
+    });
+    zombieManager.zombies = [];
+    zombieManager.addZombie(new THREE.Vector3(0, 0, -7)); // First zombie
+    zombieManager.addZombie(new THREE.Vector3(-3, 0, -7)); // Second zombie
+    zombieManager.addZombie(new THREE.Vector3(3, 0, -7)); // Third zombie
+
+    // Reset player position
+    player.position.set(0, 0.5, 0);
+    updateCameraPosition();
+
+    // Restart the animation loop
+    animate();
+}
