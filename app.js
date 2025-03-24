@@ -161,6 +161,8 @@ let zombieAttackStartTime = 0;
 const zombieAttackRange = 1.0; // Increased attack range
 const zombieAttackCooldown = 1.5; // Cooldown time between attacks (in seconds)
 
+const playerPunchRange = 1.5; // Slightly longer than the zombie's attack range
+
 // Event listeners for key press and release
 window.addEventListener('keydown', (event) => {
     switch (event.key) {
@@ -231,8 +233,20 @@ window.addEventListener('keyup', (event) => {
                 const damage = Math.min(chargeDuration * 10, 50); // Cap damage at 50
                 const knockback = Math.min(chargeDuration * 2, 10); // Cap knockback at 10
 
-                // Apply knockback to the zombie
-                applyKnockbackToZombie(knockback);
+                // Check if the zombie is within punching range
+                const distanceToZombie = zombieGroup.position.distanceTo(player.position);
+                if (distanceToZombie <= playerPunchRange) {
+                    zombieHealth -= damage; // Apply damage to the zombie
+                    console.log(`Zombie hit! Damage: ${damage}, Zombie Health: ${zombieHealth}`);
+
+                    // Apply knockback to the zombie
+                    applyKnockbackToZombie(knockback);
+
+                    // Check if the zombie is dead
+                    if (zombieHealth <= 0) {
+                        handleZombieDeath(); // Call the centralized death handler
+                    }
+                }
 
                 console.log(`Attack released! Damage: ${damage}, Knockback: ${knockback}`);
             }
