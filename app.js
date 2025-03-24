@@ -393,6 +393,14 @@ function updateHealthBars() {
     zombieHealthBar.material.color.set(zombieHealthPercentage > 0.5 ? 0x00ff00 : 0xff0000); // Green if >50%, red otherwise
 }
 
+// Create a red tile (plane)
+const redTileGeometry = new THREE.PlaneGeometry(2, 2); // Width and height of the tile
+const redTileMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red color
+const redTile = new THREE.Mesh(redTileGeometry, redTileMaterial);
+redTile.rotation.x = -Math.PI / 2; // Rotate to make it horizontal
+redTile.position.set(0, 0.01, 2); // Position behind the player (slightly above the grass to avoid z-fighting)
+scene.add(redTile); // Add the red tile to the scene
+
 // Modify the animation loop to include player movement and camera updates
 function animate() {
     requestAnimationFrame(animate);
