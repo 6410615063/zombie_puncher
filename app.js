@@ -146,6 +146,8 @@ scene.add(baseballBatGroup);
 const wallBoundingBox = new THREE.Box3().setFromObject(wall);
 const playerBoundingBox = new THREE.Box3();
 const zombieBoundingBox = new THREE.Box3();
+// Create a bounding box for the baseball bat
+const baseballBatBoundingBox = new THREE.Box3().setFromObject(baseballBatGroup);
 
 // Movement variables
 const movement = {
@@ -588,6 +590,28 @@ function showDamageOverlay() {
     }, 1000);
 }
 
+// Function to pick up the baseball bat
+function pickUpBaseballBat() {
+    console.log("Baseball bat picked up!");
+
+    // Remove the bat from the scene
+    scene.remove(baseballBatGroup);
+
+    // Clear the bat's bounding box
+    baseballBatBoundingBox.makeEmpty();
+
+    // Add the bat to the inventory
+    selectInventorySlot(1); // Assume slot 1 is for the baseball bat
+    const batSlot = document.getElementById('slot-1');
+    batSlot.innerText = "Bat"; // Add text to the inventory slot
+    batSlot.style.color = "white"; // Set the text color
+    batSlot.style.fontSize = "14px"; // Adjust the font size
+    batSlot.style.textAlign = "center"; // Center the text
+    batSlot.style.lineHeight = "50px"; // Vertically center the text (matches the slot height)
+
+    console.log("Baseball bat added to inventory!");
+}
+
 // Modify the animation loop to include player movement and camera updates
 function animate() {
     animationId = requestAnimationFrame(animate);
@@ -603,6 +627,11 @@ function animate() {
 
     // Update the fist during charging
     updateFistDuringCharging();
+
+    // Check for collision with the baseball bat
+    if (baseballBatBoundingBox.intersectsBox(playerBoundingBox)) {
+        pickUpBaseballBat();
+    }
 
     // Update health bars
     updateHealthBars();
