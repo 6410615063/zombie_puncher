@@ -580,8 +580,10 @@ function zombieAttack(zombie, boundingBox) {
     const attackDuration = 0.5; // Duration of the attack animation (in seconds)
 
     const attackInterval = setInterval(() => {
-        if (!isZombieAlive) {
+        // Check if the zombie is still alive
+        if (!zombieManager.zombies.some((z) => z.group === zombie)) {
             clearInterval(attackInterval); // Stop the attack animation if the zombie dies
+            isZombieAttacking = false;
             return;
         }
 
@@ -604,6 +606,11 @@ function zombieAttack(zombie, boundingBox) {
 
     // Apply damage to the player
     setTimeout(() => {
+        // Check if the zombie is still alive before applying damage
+        if (!zombieManager.zombies.some((z) => z.group === zombie)) {
+            return; // Stop if the zombie is dead
+        }
+
         if (playerBoundingBox.intersectsBox(boundingBox)) {
             playerHealth -= 10; // Reduce player's health by 10
             console.log(`Player hit by zombie! Health: ${playerHealth}`);
