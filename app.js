@@ -493,7 +493,7 @@ function zombieAttack() {
         }
 
         if (playerBoundingBox.intersectsBox(zombieBoundingBox)) {
-            playerHealth -= 10; // Reduce player's health
+            playerHealth -= 10; // Reduce player's health by 10
             console.log(`Player hit by zombie! Health: ${playerHealth}`);
 
             // Show the red overlay
