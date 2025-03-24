@@ -327,14 +327,7 @@ function applyKnockbackToZombie(knockback) {
 
     // Check if the zombie is dead
     if (zombieHealth <= 0) {
-        console.log("Zombie defeated!");
-        scene.remove(zombieGroup); // Remove the zombie from the scene
-
-        // Reset the zombie's bounding box to prevent further collisions
-        zombieBoundingBox.makeEmpty();
-
-        // Mark the zombie as dead
-        isZombieAlive = false;
+        handleZombieDeath(); // Call the centralized death handler
     } else {
         // Update the zombie's bounding box
         zombieBoundingBox.setFromObject(zombieGroup);
@@ -401,9 +394,78 @@ redTile.rotation.x = -Math.PI / 2; // Rotate to make it horizontal
 redTile.position.set(0, 0.01, 2); // Position behind the player (slightly above the grass to avoid z-fighting)
 scene.add(redTile); // Add the red tile to the scene
 
+// Create a bounding box for the red tile
+const redTileBoundingBox = new THREE.Box3().setFromObject(redTile);
+
+function checkRedTileCollision() {
+    // Update bounding boxes
+    playerBoundingBox.setFromObject(player);
+    zombieBoundingBox.setFromObject(zombieGroup);
+
+    // Check if the player steps on the red tile
+    if (playerBoundingBox.intersectsBox(redTileBoundingBox)) {
+        playerHealth -= 1; // Reduce player's health
+        console.log(`Player stepped on the red tile! Health: ${playerHealth}`);
+
+        // Check if the player is dead
+        if (playerHealth <= 0) {
+            console.log("Game Over! Player defeated.");
+            displayGameOverScreen();
+        }
+    }
+
+    // Check if the zombie steps on the red tile
+    if (zombieBoundingBox.intersectsBox(redTileBoundingBox)) {
+        zombieHealth -= 1; // Reduce zombie's health
+        console.log(`Zombie stepped on the red tile! Health: ${zombieHealth}`);
+
+        // Check if the zombie is dead
+        if (zombieHealth <= 0) {
+            handleZombieDeath(); // Call the centralized death handler
+        }
+    }
+}
+
+// Function to handle zombie death
+function handleZombieDeath() {
+    // Replace the zombie with a "corpse"
+    const corpseMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 }); // Brown color for the corpse
+    const corpse = new THREE.Mesh(new THREE.BoxGeometry(1, 0.5, 1), corpseMaterial);
+    corpse.position.copy(zombieGroup.position); // Place the corpse where the zombie died
+    scene.add(corpse);
+
+    // Remove the zombie from the scene
+    scene.remove(zombieGroup);
+
+    // Mark the zombie as dead
+    isZombieAlive = false;
+
+    console.log("Zombie defeated! A corpse has been left behind.");
+}
+
+// Function to display the game over screen
+function displayGameOverScreen() {
+    // Stop the game loop
+    cancelAnimationFrame(animationId);
+
+    // Create a "Game Over" overlay
+    const gameOverOverlay = document.createElement('div');
+    gameOverOverlay.style.position = 'absolute';
+    gameOverOverlay.style.top = '50%';
+    gameOverOverlay.style.left = '50%';
+    gameOverOverlay.style.transform = 'translate(-50%, -50%)';
+    gameOverOverlay.style.fontSize = '48px';
+    gameOverOverlay.style.color = 'red';
+    gameOverOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    gameOverOverlay.style.padding = '20px';
+    gameOverOverlay.style.borderRadius = '10px';
+    gameOverOverlay.innerText = 'Game Over';
+    document.body.appendChild(gameOverOverlay);
+}
+
 // Modify the animation loop to include player movement and camera updates
 function animate() {
-    requestAnimationFrame(animate);
+    animationId = requestAnimationFrame(animate);
 
     // Update player position
     updatePlayerPosition();
@@ -416,6 +478,9 @@ function animate() {
 
     // Update the fist during charging
     updateFistDuringCharging();
+
+    // Check for collisions with the red tile
+    checkRedTileCollision();
 
     // Update health bars
     updateHealthBars();
