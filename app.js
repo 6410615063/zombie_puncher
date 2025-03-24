@@ -61,6 +61,17 @@ fistCamera.position.set(0.5, -0.5, -1); // Slightly to the right, below, and in 
 camera.add(fistCamera); // Attach the fist to the camera
 scene.add(camera); // Ensure the camera (with the fist) is part of the scene
 
+// Create a baseball bat for the camera view
+const batGeometryCamera = new THREE.CylinderGeometry(0.05, 0.05, 1.5, 32); // Thin cylinder for the bat
+const batMaterialCamera = new THREE.MeshBasicMaterial({ color: 0x8B4513 }); // Brown color for the bat
+const batCamera = new THREE.Mesh(batGeometryCamera, batMaterialCamera);
+
+// Position the bat in front of the camera
+batCamera.position.set(0.5, -0.5, -1); // Slightly to the right, below, and in front of the camera
+batCamera.rotation.z = Math.PI / 4; // Rotate the bat slightly for a natural look
+batCamera.visible = false; // Initially hide the bat
+camera.add(batCamera); // Attach the bat to the camera
+
 // Create a zombie (composed of cubes)
 const zombieGroup = new THREE.Group(); // Group to hold all parts of the zombie
 
@@ -149,6 +160,9 @@ const zombieBoundingBox = new THREE.Box3();
 // Create a bounding box for the baseball bat
 const baseballBatBoundingBox = new THREE.Box3().setFromObject(baseballBatGroup);
 
+const batDamage = 30; // Higher damage than punching
+const batRange = 2.0; // Longer range than punching
+
 // Movement variables
 const movement = {
     forward: false,
@@ -174,6 +188,9 @@ let chargeStartTime = 0;
 // Variables for fist animation
 let isPunching = false;
 let punchStartTime = 0;
+
+let isSwingingBat = false;
+let batSwingStartTime = 0;
 
 // Zombie health
 let zombieHealth = 100;
@@ -264,31 +281,62 @@ window.addEventListener('keyup', (event) => {
         case ' ':
             if (isCharging) {
                 isCharging = false;
-                isPunching = true;
-                punchStartTime = performance.now(); // Record the time when punching starts
 
-                const chargeDuration = (performance.now() - chargeStartTime) / 1000; // Calculate charge duration in seconds
+                if (selectedSlot === 0) {
+                    // Fist attack logic
+                    isPunching = true;
+                    punchStartTime = performance.now(); // Record the time when punching starts
 
-                // Calculate damage and knockback based on charge duration
-                const damage = Math.min(chargeDuration * 10, 50); // Cap damage at 50
-                const knockback = Math.min(chargeDuration * 2, 10); // Cap knockback at 10
+                    const chargeDuration = (performance.now() - chargeStartTime) / 1000; // Calculate charge duration in seconds
 
-                // Check if the zombie is within punching range
-                const distanceToZombie = zombieGroup.position.distanceTo(player.position);
-                if (distanceToZombie <= playerPunchRange) {
-                    zombieHealth -= damage; // Apply damage to the zombie
-                    console.log(`Zombie hit! Damage: ${damage}, Zombie Health: ${zombieHealth}`);
+                    // Calculate damage and knockback based on charge duration
+                    const damage = Math.min(chargeDuration * 10, 50); // Cap damage at 50
+                    const knockback = Math.min(chargeDuration * 2, 10); // Cap knockback at 10
 
-                    // Apply knockback to the zombie
-                    applyKnockbackToZombie(knockback);
+                    // Check if the zombie is within punching range
+                    const distanceToZombie = zombieGroup.position.distanceTo(player.position);
+                    if (distanceToZombie <= playerPunchRange) {
+                        zombieHealth -= damage; // Apply damage to the zombie
+                        console.log(`Zombie hit! Damage: ${damage}, Zombie Health: ${zombieHealth}`);
 
-                    // Check if the zombie is dead
-                    if (zombieHealth <= 0) {
-                        handleZombieDeath(); // Call the centralized death handler
+                        // Apply knockback to the zombie
+                        applyKnockbackToZombie(knockback);
+
+                        // Check if the zombie is dead
+                        if (zombieHealth <= 0) {
+                            handleZombieDeath(); // Call the centralized death handler
+                        }
                     }
-                }
 
-                console.log(`Attack released! Damage: ${damage}, Knockback: ${knockback}`);
+                    console.log(`Fist attack released! Damage: ${damage}, Knockback: ${knockback}`);
+                } else if (selectedSlot === 1) {
+                    // Baseball bat attack logic
+                    isSwingingBat = true;
+                    batSwingStartTime = performance.now(); // Record the time when swinging starts
+
+                    const chargeDuration = (performance.now() - chargeStartTime) / 1000; // Calculate charge duration in seconds
+
+                    // Calculate damage and knockback based on charge duration
+                    const damage = Math.min(chargeDuration * 20, batDamage); // Cap damage at batDamage
+                    const knockback = Math.min(chargeDuration * 3, 15); // Cap knockback at 15
+
+                    // Check if the zombie is within the bat's range
+                    const distanceToZombie = zombieGroup.position.distanceTo(player.position);
+                    if (distanceToZombie <= batRange) {
+                        zombieHealth -= damage; // Apply damage to the zombie
+                        console.log(`Zombie hit with bat! Damage: ${damage}, Zombie Health: ${zombieHealth}`);
+
+                        // Apply knockback to the zombie
+                        applyKnockbackToZombie(knockback);
+
+                        // Check if the zombie is dead
+                        if (zombieHealth <= 0) {
+                            handleZombieDeath(); // Call the centralized death handler
+                        }
+                    }
+
+                    console.log(`Bat attack released! Damage: ${damage}, Knockback: ${knockback}`);
+                }
             }
             break;
     }
@@ -308,6 +356,17 @@ function selectInventorySlot(slotNumber) {
     if (selectedSlot > 0) {
         const newSlot = document.getElementById(`slot-${selectedSlot}`);
         newSlot.classList.add('selected');
+    }
+
+    // Toggle between fist and bat models
+    if (selectedSlot === 0) {
+        // Show the fist and hide the bat
+        fistCamera.visible = true;
+        batCamera.visible = false;
+    } else if (selectedSlot === 1) {
+        // Show the bat and hide the fist
+        fistCamera.visible = false;
+        batCamera.visible = true;
     }
 
     console.log(`Selected slot: ${selectedSlot}`);
@@ -471,6 +530,40 @@ function updateFistDuringCharging() {
     }
 }
 
+function updateBatDuringCharging() {
+    if (isCharging && selectedSlot === 1) { // Check if the bat is selected
+        const chargeDuration = (performance.now() - chargeStartTime) / 2000; // Normalize charge duration (2 seconds to reach max charge)
+        const scale = Math.min(1 + chargeDuration, 1.5); // Scale the bat slightly during charging
+
+        // Make the bat shake slightly when fully charged
+        if (chargeDuration >= 1) {
+            const shakeAmount = 0.05 * Math.sin(performance.now() * 10); // Small oscillation
+            batCamera.position.x = 0.5 + shakeAmount; // Add shake to the x position
+        } else {
+            batCamera.position.x = 0.5; // Reset position if not fully charged
+        }
+
+        // Scale the bat during charging
+        batCamera.scale.set(scale, scale, scale);
+    } else if (isSwingingBat) {
+        // Handle swinging animation
+        const swingDuration = (performance.now() - batSwingStartTime) / 1000;
+
+        if (swingDuration < 0.2) {
+            // Swing the bat forward
+            batCamera.rotation.z = -Math.PI / 4;
+        } else if (swingDuration < 0.4) {
+            // Retract the bat back
+            batCamera.rotation.z = 0;
+        } else {
+            // End swinging animation
+            isSwingingBat = false;
+            batCamera.scale.set(1, 1, 1); // Reset scale
+            batCamera.position.set(0.5, -0.5, -1); // Reset position
+        }
+    }
+}
+
 // Function to update health bars
 function updateHealthBars() {
     // Update player's health bar
@@ -627,6 +720,9 @@ function animate() {
 
     // Update the fist during charging
     updateFistDuringCharging();
+
+    // Update the bat during charging and swinging
+    updateBatDuringCharging();
 
     // Check for collision with the baseball bat
     if (baseballBatBoundingBox.intersectsBox(playerBoundingBox)) {
