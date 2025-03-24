@@ -117,6 +117,31 @@ zombieGroup.add(zombieHealthBar); // Attach to the zombie group
 zombieGroup.position.set(0, 0, -7); // Adjust position as needed
 scene.add(zombieGroup);
 
+// Create the baseball bat
+const baseballBatGroup = new THREE.Group(); // Group to hold all parts of the bat
+
+// Bat handle (shorter cylinder)
+const batHandleGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.5, 32); // Shorter handle: height = 1.0
+const batHandleMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 }); // Brown color for the handle
+const batHandle = new THREE.Mesh(batHandleGeometry, batHandleMaterial);
+batHandle.position.set(0, 0.5, 0); // Adjust position for shorter handle
+baseballBatGroup.add(batHandle);
+
+// Bat head (longer cylinder)
+const batHeadGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1.5, 32); // Longer head: height = 1.0
+const batHeadMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 }); // Tan color for the bat head
+const batHead = new THREE.Mesh(batHeadGeometry, batHeadMaterial);
+batHead.position.set(0, 1.5, 0); // Adjust position for longer head
+baseballBatGroup.add(batHead);
+
+// Position the bat leaning on the wall
+baseballBatGroup.position.set(-3, 0, -9); // Position near the wall
+baseballBatGroup.rotation.z = Math.PI / 6; // Lean the bat slightly
+baseballBatGroup.rotation.y = Math.PI / 8; // Rotate slightly for a natural look
+
+// Add the bat to the scene
+scene.add(baseballBatGroup);
+
 // Create bounding boxes for collision detection
 const wallBoundingBox = new THREE.Box3().setFromObject(wall);
 const playerBoundingBox = new THREE.Box3();
