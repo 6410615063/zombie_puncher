@@ -47,46 +47,8 @@ fistCamera.position.set(0.5, -0.5, -1); // Slightly to the right, below, and in 
 camera.add(fistCamera); // Attach the fist to the camera
 scene.add(camera); // Ensure the camera (with the fist) is part of the scene
 
-// Create a baseball bat for the camera view
-const batGeometryCamera = new THREE.CylinderGeometry(0.05, 0.05, 1.5, 32); // Thin cylinder for the bat
-const batMaterialCamera = new THREE.MeshBasicMaterial({ color: 0x8B4513 }); // Brown color for the bat
-const batCamera = new THREE.Mesh(batGeometryCamera, batMaterialCamera);
-
-// Position the bat in front of the camera
-batCamera.position.set(0.5, -0.5, -1); // Slightly to the right, below, and in front of the camera
-batCamera.rotation.z = Math.PI / 4; // Rotate the bat slightly for a natural look
-batCamera.visible = false; // Initially hide the bat
-camera.add(batCamera); // Attach the bat to the camera
-
-// Create the baseball bat
-const baseballBatGroup = new THREE.Group(); // Group to hold all parts of the bat
-
-// Bat handle (shorter cylinder)
-const batHandleGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.5, 32); // Shorter handle: height = 1.0
-const batHandleMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 }); // Brown color for the handle
-const batHandle = new THREE.Mesh(batHandleGeometry, batHandleMaterial);
-batHandle.position.set(0, 0.5, 0); // Adjust position for shorter handle
-baseballBatGroup.add(batHandle);
-
-// Bat head (longer cylinder)
-const batHeadGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1.5, 32); // Longer head: height = 1.0
-const batHeadMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 }); // Tan color for the bat head
-const batHead = new THREE.Mesh(batHeadGeometry, batHeadMaterial);
-batHead.position.set(0, 1.5, 0); // Adjust position for longer head
-baseballBatGroup.add(batHead);
-
-// Position the bat leaning on the wall
-baseballBatGroup.position.set(-3, 0, -9); // Position near the wall
-baseballBatGroup.rotation.z = Math.PI / 6; // Lean the bat slightly
-baseballBatGroup.rotation.y = Math.PI / 8; // Rotate slightly for a natural look
-
-// Add the bat to the scene
-scene.add(baseballBatGroup);
-
 // Create bounding boxes for collision detection
 const playerBoundingBox = new THREE.Box3();
-// Create a bounding box for the baseball bat
-const baseballBatBoundingBox = new THREE.Box3().setFromObject(baseballBatGroup);
 
 const batDamage = 30; // Higher damage than punching
 const batRange = 2.0; // Longer range than punching
@@ -303,11 +265,9 @@ function selectInventorySlot(slotNumber) {
     if (selectedSlot === 1) {
         // Show the fist and hide other weapons
         fistCamera.visible = true;
-        batCamera.visible = false;
     } else if (selectedSlot === 2) {
         // Show the bat and hide the fist
         fistCamera.visible = false;
-        batCamera.visible = true;
     }
 
     console.log(`Selected slot: ${selectedSlot}`);
@@ -496,40 +456,6 @@ function updateFistDuringCharging() {
     }
 }
 
-function updateBatDuringCharging() {
-    if (isCharging && selectedSlot === 1) { // Check if the bat is selected
-        const chargeDuration = (performance.now() - chargeStartTime) / 2000; // Normalize charge duration (2 seconds to reach max charge)
-        const scale = Math.min(1 + chargeDuration, 1.5); // Scale the bat slightly during charging
-
-        // Make the bat shake slightly when fully charged
-        if (chargeDuration >= 1) {
-            const shakeAmount = 0.05 * Math.sin(performance.now() * 10); // Small oscillation
-            batCamera.position.x = 0.5 + shakeAmount; // Add shake to the x position
-        } else {
-            batCamera.position.x = 0.5; // Reset position if not fully charged
-        }
-
-        // Scale the bat during charging
-        batCamera.scale.set(scale, scale, scale);
-    } else if (isSwingingBat) {
-        // Handle swinging animation
-        const swingDuration = (performance.now() - batSwingStartTime) / 1000;
-
-        if (swingDuration < 0.2) {
-            // Swing the bat forward
-            batCamera.rotation.z = -Math.PI / 4;
-        } else if (swingDuration < 0.4) {
-            // Retract the bat back
-            batCamera.rotation.z = 0;
-        } else {
-            // End swinging animation
-            isSwingingBat = false;
-            batCamera.scale.set(1, 1, 1); // Reset scale
-            batCamera.position.set(0.5, -0.5, -1); // Reset position
-        }
-    }
-}
-
 // Function to update health bars
 function updateHealthBars() {
     // Update player's health bar
@@ -683,28 +609,6 @@ function showDamageOverlay() {
     }, 1000);
 }
 
-// Function to pick up the baseball bat
-function pickUpBaseballBat() {
-    console.log("Baseball bat picked up!");
-
-    // Remove the bat from the scene
-    scene.remove(baseballBatGroup);
-
-    // Clear the bat's bounding box
-    baseballBatBoundingBox.makeEmpty();
-
-    // Add the bat to the inventory
-    selectInventorySlot(1); // Assume slot 1 is for the baseball bat
-    const batSlot = document.getElementById('slot-1');
-    batSlot.innerText = "Bat"; // Add text to the inventory slot
-    batSlot.style.color = "white"; // Set the text color
-    batSlot.style.fontSize = "14px"; // Adjust the font size
-    batSlot.style.textAlign = "center"; // Center the text
-    batSlot.style.lineHeight = "50px"; // Vertically center the text (matches the slot height)
-
-    console.log("Baseball bat added to inventory!");
-}
-
 // Modify the animation loop to include player movement and camera updates
 function animate() {
     animationId = requestAnimationFrame(animate);
@@ -718,16 +622,11 @@ function animate() {
     // Update zombies
     zombieManager.updateZombies();
 
+    // Spawn more zombies if all are dead
+    spawnMoreZombies();
+
     // Update the fist during charging
     updateFistDuringCharging();
-
-    // Update the bat during charging and swinging
-    updateBatDuringCharging();
-
-    // Check for collision with the baseball bat
-    if (baseballBatBoundingBox.intersectsBox(playerBoundingBox)) {
-        pickUpBaseballBat();
-    }
 
     // Update health bars
     updateHealthBars();
@@ -891,6 +790,10 @@ class ZombieManager {
 
         console.log("Zombie defeated! A corpse has been left behind.");
     }
+
+    areAllZombiesDead() {
+        return this.zombies.length === 0;
+    }
 }
 
 // Update the zombie position function to use the ZombieManager
@@ -907,39 +810,6 @@ zombieManager.addZombie(new THREE.Vector3(-3, 0, -7)); // Second zombie
 zombieManager.addZombie(new THREE.Vector3(3, 0, -7)); // Third zombie
 
 const attackDuration = 1.0; // Duration of the zombie attack animation in seconds
-
-// Modify the animation loop to include player movement and camera updates
-function animate() {
-    animationId = requestAnimationFrame(animate);
-
-    // Update player position
-    updatePlayerPosition();
-
-    // Update camera rotation
-    updateCameraRotation();
-
-    // Update zombies
-    zombieManager.updateZombies();
-
-    // Update the fist during charging
-    updateFistDuringCharging();
-
-    // Update the bat during charging and swinging
-    updateBatDuringCharging();
-
-    // Check for collision with the baseball bat
-    if (baseballBatBoundingBox.intersectsBox(playerBoundingBox)) {
-        pickUpBaseballBat();
-    }
-
-    // Update health bars
-    updateHealthBars();
-
-    // Update camera position after all changes
-    updateCameraPosition();
-
-    renderer.render(scene, camera);
-}
 
 function restartGame() {
     console.log("Restarting game...");
@@ -1031,6 +901,20 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 });
+
+function spawnMoreZombies() {
+    if (zombieManager.areAllZombiesDead()) {
+        const numberOfZombiesToSpawn = Math.floor(currentScore / 50) + 3; // Increase zombies based on score
+        console.log(`Spawning ${numberOfZombiesToSpawn} zombies...`);
+
+        for (let i = 0; i < numberOfZombiesToSpawn; i++) {
+            // Spawn zombies far from the player
+            const randomX = (Math.random() * 40 - 20) + (Math.random() > 0.5 ? 30 : -30); // Random X position far from the player
+            const randomZ = (Math.random() * 40 - 20) + (Math.random() > 0.5 ? 30 : -30); // Random Z position far from the player
+            zombieManager.addZombie(new THREE.Vector3(randomX, 0, randomZ));
+        }
+    }
+}
 
 // Start animation
 animate();
