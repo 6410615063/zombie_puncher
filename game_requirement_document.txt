@@ -91,7 +91,6 @@ Step-by-Step Implementation plan
         Test: I will try it out
     20. add 2 more zombies next to the first one
         Test: I will play the game
-    
     21. refractor the weapons system
         - change the way weapons is implemented so that it is easier to add more weapons
         - make fist count as a weapons
@@ -123,9 +122,3 @@ Step-by-Step Implementation plan
         - the crosshair should change color to orange when a zombie is within player's attack range, then change back
         - the crosshair should change color to red if a zombie was hit by an attack, then change back
         Test: I will try to play the game
-    28. add 2 more weapons
-        - do more/less damage
-        - more/less attack range
-        - faster/slower attack speed
-        - put them behind the player
-        Test: I will find & try them out

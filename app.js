@@ -129,6 +129,19 @@ scoreDisplay.style.color = 'white';
 scoreDisplay.innerText = `Score: ${currentScore}`;
 document.body.appendChild(scoreDisplay);
 
+// Create a crosshair element
+const crosshair = document.createElement('div');
+crosshair.style.position = 'absolute';
+crosshair.style.top = '50%';
+crosshair.style.left = '50%';
+crosshair.style.width = '10px';
+crosshair.style.height = '10px';
+crosshair.style.backgroundColor = 'white';
+crosshair.style.borderRadius = '50%';
+crosshair.style.transform = 'translate(-50%, -50%)';
+crosshair.style.zIndex = '1000'; // Ensure it appears above everything else
+document.body.appendChild(crosshair);
+
 // Function to update the score display
 function updateScoreDisplay() {
     scoreDisplay.innerText = `Score: ${currentScore}`;
@@ -625,6 +638,9 @@ function animate() {
     // Spawn more zombies if all are dead
     spawnMoreZombies();
 
+    // Check zombie proximity
+    checkZombieProximity();
+
     // Update the fist during charging
     updateFistDuringCharging();
 
@@ -645,7 +661,8 @@ window.addEventListener('resize', () => {
 });
 
 function checkZombieCollision(damage, knockback) {
-    // Iterate through all zombies in the ZombieManager
+    let zombieHit = false;
+
     zombieManager.zombies.forEach((zombie, index) => {
         if (zombie.health > 0 && playerBoundingBox.intersectsBox(zombie.boundingBox)) {
             // Apply damage to the zombie
@@ -659,8 +676,18 @@ function checkZombieCollision(damage, knockback) {
             if (zombie.health <= 0) {
                 zombieManager.handleZombieDeath(index);
             }
+
+            zombieHit = true;
         }
     });
+
+    // Change crosshair color if a zombie is hit
+    if (zombieHit) {
+        crosshair.style.backgroundColor = 'red';
+        setTimeout(() => {
+            crosshair.style.backgroundColor = 'white'; // Reset to default after a short delay
+        }, 200);
+    }
 }
 
 class ZombieManager {
@@ -918,3 +945,21 @@ function spawnMoreZombies() {
 
 // Start animation
 animate();
+
+function checkZombieProximity() {
+    let zombieInRange = false;
+
+    zombieManager.zombies.forEach((zombie) => {
+        const distanceToPlayer = zombie.group.position.distanceTo(player.position);
+        if (distanceToPlayer <= playerPunchRange) {
+            zombieInRange = true;
+        }
+    });
+
+    // Change crosshair color based on proximity
+    if (zombieInRange) {
+        crosshair.style.backgroundColor = 'orange'; // Zombie is within attack range
+    } else {
+        crosshair.style.backgroundColor = 'white'; // Default color
+    }
+}
