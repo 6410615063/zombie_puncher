@@ -1,90 +1,299 @@
-6410615063: Read the Game Requirement Document
-When you are ready, do step 1
+Read the Game Requirement Document. When you are ready, do step 1
 
-6410615063: remove the spining cube
+remove the spining cube
 
-6410615063: I do not see the grass field?
+I do not see the grass field?
 
-6410615063: test passed.
+test passed.
 
-6410615063: proceed to step 2
+proceed to step 2
 
-6410615063: make the camera a first person camera
+make the camera a first person camera
 
-6410615063: Now the WASD keys no longer work
+Now the WASD keys no longer work
 
-6410615063: test passed. to the next step
+test passed. to the next step
 
-6410615063: Everything work fine until I try pressing the Q or E keys
-Pressing either of them seem to cause the screen to rapidly change between 2 rotation?
+Everything work fine until I try pressing the Q or E keys
 
-6410615063: Still bugged. But now it seem like the camera only rotated onec per press, instead of keep rotating while holding the key
+Still bugged. But now it seem like the camera only rotated onec per press, instead of keep rotating while holding the key
 
-6410615063: the screen still flickering after I press Q or E once
+the screen still flickering after I press Q or E once
 
-6410615063: swap Q and E's rotation direction
+swap Q and E's rotation direction
 
-6410615063: it seem that I am limited to rotating only 90 degree in either direction? Make it so that I can rotate all around in either direction
+it seem that I am limited to rotating only 90 degree in either direction? Make it so that I can rotate all around in either direction
 
-6410615063: Still has the same problem. It seem that once I reach the rotate limit, the screen keep flickering between rotaating further and stay at the limit?
+Still has the same problem. It seem that once I reach the rotate limit, the screen keep flickering between rotaating further and stay at the limit?
 
-6410615063: still flickering
+still flickering
 
-6410615063: still flickering
+still flickering
 
-6410615063: Now it's getting worse. Can you revert it to before the most recent change?
+Now it's getting worse. Can you revert it to before the most recent change?
 
-6410615063: Alright.
-Currently, if I let the direction I started in be 0 degree, I can only rotate to 90 and -90 degree.
-Once I reach 90 degree, trying to rotate more seem like it keep making the screen switch between 91 and 90 degree.
-How to fix that?
+Alright.
 
-6410615063: make the camera start looking straight toward the wall
+make the camera start looking straight toward the wall
 
-6410615063: test passed. next step.
+test passed. next step.
 
-6410615063: Can you put a black outline on the wall?
+Can you put a black outline on the wall?
 
-6410615063: swap Q and E
+swap Q and E
 
-6410615063: test passed. next step
+test passed. next step
 
-6410615063: test passed. next step
+test passed. next step
 
-6410615063: make the zombie look at the player
+make the zombie look at the player
 
-6410615063: test passed. next step.
+test passed. next step.
 
-6410615063: now I cannot move, and the zombie disappear
+now I cannot move, and the zombie disappear
 
-6410615063: make the zombie also stop movin toward the player once it come in contact with the player, like the wall. But makeit so that it will still chase the player if the player run away
+make the zombie also stop movin toward the player once it come in contact with the player, like the wall. But makeit so that it will still chase the player if the player run away
 
-6410615063: test passed. next step
+test passed. next step
 
-6410615063: add a fist to show the attacking & charging
+add a fist to show the attacking & charging
 
-6410615063: I currently still cannot see the fist. Maybe adjusting the fist's position so that it will be visible on the camera? It doesnt need to actually connect to the body
+I currently still cannot see the fist. Maybe adjusting the fist's position so that it will be visible on the camera? It doesnt need to actually connect to the body
 
-6410615063: animate the fist based on how much the attack is charged
+animate the fist based on how much the attack is charged
 
-6410615063: only animate the fist expanding while charging, remove the 'moving the fist forward' part
+only animate the fist expanding while charging, remove the 'moving the fist forward' part
 
-6410615063: test passed. next step
+test passed. next step
 
-6410615063: player's health keep decreasing after the zombie is dead
+player's health keep decreasing after the zombie is dead
 
-6410615063: test passed. let's stop here for today
+it seem that the zombie's hitbox still exist after it's dead
 
-6410615063: would it be easier for you to implementing other steps if app.js was to be seperated into multiple files?
+test passed. let's stop here for today
 
-6410615063: what to do with app.js now?
+would it be easier for you to implementing other steps if app.js was to be seperated into multiple files?
 
-6410615063: I commented app.js. and now nothing get rendered?
+refactor app.js
 
-6410615063: do I need to includ all file in here?
+what to do with app.js now?
 
-6410615063: only the sky is rendered
+I commented app.js. and now nothing get rendered?
 
-6410615063: It seem like you(copilot) can only see one of my file at a time?
+do I need to includ all file in here?
 
-6410615063:  i will just put everything in the same file then. So that you can reference everything
+only the sky is rendered
+
+It seem like you(copilot) can only see one of my file at a time?
+
+ i will just put everything in the same file then. So that you can reference everything
+
+Alright, let's continue.
+
+are you sure?
+
+proceed
+
+can the fist be a circle instead?
+
+make it so that the fist only go forward when attacking, and not while charging
+
+change the fist's color to be light brown, like a human skin
+
+make it so that the fist expand slower, reaching full size at max charge
+
+test passed. what is the next step?
+
+proceed
+
+Uncaught TypeError: Cannot read properties of null (reading 'style')
+
+test passed. what is the next step?
+
+proceed
+
+test passed. what is the next step?
+
+proceed
+
+make it so that zombie always leave a corpse, regardless of if the red tile or the player kill it
+
+test passed. what is the next step?
+
+proceed
+
+it seem that after the zombie is dead, its htibox still exist
+
+it seem that currently zombie can damage player by either touching the player, or by doing the delayed attack. Remove the 'damage by touching' part
+
+it seem that curently the zombie stop before the player is within its attack range?
+
+make the zombie's attack range slightly longer
+
+remove the red tile
+
+give zombie arms, then animate the arms when the zombie attack
+
+the zombie does not colid with the wall
+
+the zombie's hitbox still exist after death. remove it after the zombie's death
+
+the zombie's hitbox still exists after its death, and it can still chase and attack the player. fix it
+
+make the zombie's arms point forward
+
+test passed. what is the next step?
+
+proceed
+
+test passed. what is the next step?
+
+proceed
+
+test passed. what is the next step?
+
+proceed
+
+test passed. what is the next step?
+
+proceed
+
+it seem that some of the variable names you use here are already used in my current code
+
+make the bat handle shorter, and the bat head longer, like a baseball bat
+
+test passed. what is the next step?
+
+proceed
+
+test passed. what is the next step?
+
+proceed
+
+the bat was picked up, but the bat icon did not appear
+
+can you make the slot say 'baseball bat' or 'bat' instead of using an image as an icon?
+
+test passed. what is the next step?
+
+proceed
+
+your edit to "window.addEventListener('keyup', (event) => {...})" seem to be incompatible with my current code?
+
+the bat now function as an weapon. But it still use the fist's animation
+
+make it so that when the player select the baseball bat, the fist change into a baseball bat, or a hand holding the bat
+
+add animation to the bat while attacking & charging
+
+test passed. what is the next step?
+
+proceed
+
+it seem that only some zombies can be hit by attack?
+
+refractor how zombies are currently handled so that it will be easier for the game to handle: 1)multiple zombies at the same time 2)adding more zombies in the middle of the game 3)new functions relate to zombies being add down the line in the code
+
+Uncaught ReferenceError: Cannot access 'zombieManager' before initialization
+
+the class zombieManager is initialized at line 777. There's an animate() function at line 740.
+
+there are currently 2 animate() functions. One before line 777, and one after line 777. Read the code and tell me if any of the two instances of animate() can be delete or not
+
+now the player cannot attack the zombies
+
+Uncaught TypeError: zombieManager.handleZombieDeath is not a function
+
+rotate the player's camera's starting direction by 180 degree
+
+update each zombies's health bar to match their health
+
+can everything relate to 'zombieGroup', 'zombieGroup2', and 'zombieGroup3' be removed?
+
+app.js:475 Uncaught ReferenceError: zombieHealthBar is not defined
+
+randomize each zombie's shirt's color when they are created
+
+make it so that each zombies colides with each other
+
+make it so that, when a zombie is knocked back, it is only knocked back as far as it can without coliding with anything. So if it's suppose to be knocked back 30 unit, but there is a wall 20 unit behind it, it will only get knocked back 20 unit
+
+Test passed.
+
+What is the next step?
+
+what was the last step you did before this?
+
+No. The last step you did was "Add 2 more zombies next to the first one.". What is the next step?
+
+proceed
+
+make it so that if a zombie die in the middle of its attacking animation, that attack is canceled
+
+both bats currently have no animation. Make an animation that all weapons outside from the fist shared and use?
+
+Uncaught ReferenceError: Cannot access 'weaponManager' before initialization
+
+app.js:848 Uncaught ReferenceError: Cannot access 'WeaponManager' before initialization
+
+currently the scene is just black. But the console display no error
+
+make the camera a first person view of the player
+
+the player can no longer move
+
+try to do the "Refactor the weapons system" step again. This time, try to make it so that both baseball bats use the same function for detecting if they get picked up or not
+
+skip step 21. What is the next step?
+
+proceed
+
+test passed. what is the next step?
+
+skip that step
+
+proceed
+
+now the zombies do not attack. fix it
+
+I edited the zombieAttack() function. check if it still function as intended or not
+
+Uncaught ReferenceError: attackDuration is not defined
+
+add the ability to restart the game by pressing the Enter key at the game over screen
+
+the game can restart. But the 'game over' text box stayed
+
+test passed. let's stop here for today
+
+let's continue. What is the next step?
+
+proceed
+
+app.js:362 Uncaught ReferenceError: Cannot access 'fenceBoundingBoxes' before initialization
+
+make it so that if a zombie cannot move because of another zombie, it will try to knock that zombie away a little bit
+
+double the fence's height
+
+remove the stone wall
+
+make all fences actually reach each other at the corner
+
+extend the fences so that they will cover the corner
+
+app.js:1017 Uncaught TypeError: THREE.VectorVector3 is not a constructor
+
+make the zombie's corpse the same color as their shirt
+
+test passed. What is the next step?
+
+proceed
+
+remove the baseball bat
+
+test passed. What is the next step?
+
+proceed
+
+test passed. What is the next step?
