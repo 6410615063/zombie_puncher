@@ -624,7 +624,7 @@ function showDamageOverlay() {
 
 // Modify the animation loop to include player movement and camera updates
 function animate() {
-    animationId = requestAnimationFrame(animate);
+    let animationId = requestAnimationFrame(animate);
 
     // Update player position
     updatePlayerPosition();
