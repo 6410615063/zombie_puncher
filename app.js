@@ -23,20 +23,6 @@ const grass = new THREE.Mesh(grassGeometry, grassMaterial);
 grass.rotation.x = -Math.PI / 2; // Rotate to make it horizontal
 scene.add(grass);
 
-// Create a stone wall (box)
-const wallGeometry = new THREE.BoxGeometry(10, 5, 1);
-const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x8B8B83 }); // Stone gray
-const wall = new THREE.Mesh(wallGeometry, wallMaterial);
-wall.position.set(0, 2.5, -10); // Position the wall
-scene.add(wall);
-
-// Add a black outline to the wall
-const wallEdges = new THREE.EdgesGeometry(wallGeometry); // Get the edges of the wall
-const wallOutlineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 }); // Black color
-const wallOutline = new THREE.LineSegments(wallEdges, wallOutlineMaterial);
-wallOutline.position.copy(wall.position); // Match the wall's position
-scene.add(wallOutline);
-
 // Create a player (a simple cube for now)
 const playerGeometry = new THREE.BoxGeometry(1, 1, 1);
 const playerMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Blue color
@@ -98,7 +84,6 @@ baseballBatGroup.rotation.y = Math.PI / 8; // Rotate slightly for a natural look
 scene.add(baseballBatGroup);
 
 // Create bounding boxes for collision detection
-const wallBoundingBox = new THREE.Box3().setFromObject(wall);
 const playerBoundingBox = new THREE.Box3();
 // Create a bounding box for the baseball bat
 const baseballBatBoundingBox = new THREE.Box3().setFromObject(baseballBatGroup);
@@ -358,14 +343,14 @@ function updatePlayerPosition() {
     // Update the player's bounding box
     playerBoundingBox.setFromObject(player);
 
-    // Check for collision with the wall
-    if (playerBoundingBox.intersectsBox(wallBoundingBox)) {
-        // If there's a collision with the wall, revert to the previous position
-        player.position.copy(previousPosition);
+    // Check for collision with the fences
+    for (const fenceBoundingBox of fenceBoundingBoxes) {
+        if (playerBoundingBox.intersectsBox(fenceBoundingBox)) {
+            // If there's a collision with a fence, revert to the previous position
+            player.position.copy(previousPosition);
+            break;
+        }
     }
-
-    // Remove the logic for zombie collision damage
-    // The zombie will now only damage the player through its attack animation
 
     // Update the camera position after moving the player
     updateCameraPosition();
@@ -408,16 +393,18 @@ function moveZombie(zombie, boundingBox, health, updateHealthCallback) {
     // Update the zombie's bounding box after moving
     boundingBox.setFromObject(zombie);
 
-    // Check for collision with the wall
-    if (boundingBox.intersectsBox(wallBoundingBox)) {
-        // If there's a collision with the wall, revert to the previous position
-        zombie.position.copy(previousPosition);
-    }
-
     // Check for collisions with other zombies
     zombieManager.zombies.forEach((otherZombie) => {
         if (otherZombie.group !== zombie && boundingBox.intersectsBox(otherZombie.boundingBox)) {
-            // If there's a collision with another zombie, revert to the previous position
+            // If there's a collision with another zombie, apply a small knockback
+            const knockbackDirection = new THREE.Vector3();
+            knockbackDirection.subVectors(otherZombie.group.position, zombie.position).normalize();
+
+            // Apply a small knockback to the other zombie
+            otherZombie.group.position.x += knockbackDirection.x * 0.2; // Small knockback distance
+            otherZombie.group.position.z += knockbackDirection.z * 0.2;
+
+            // Revert the current zombie's position to avoid overlap
             zombie.position.copy(previousPosition);
         }
     });
@@ -450,13 +437,6 @@ function applyKnockbackToZombie(zombie, knockback) {
 
         // Update the zombie's bounding box
         const boundingBox = new THREE.Box3().setFromObject(zombie);
-
-        // Check for collisions with walls
-        if (boundingBox.intersectsBox(wallBoundingBox)) {
-            // Revert to the last valid position and stop knockback
-            zombie.position.copy(originalPosition);
-            break;
-        }
 
         // Check for collisions with other zombies
         let collidedWithOtherZombie = false;
@@ -890,10 +870,13 @@ class ZombieManager {
     handleZombieDeath(index) {
         const zombie = this.zombies[index];
 
+        // Get the zombie's shirt color
+        const shirtColor = zombie.group.children[0].material.color; // The first child is the zombie's shirt
+
         // Replace the zombie with a "corpse"
-        const corpseMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
+        const corpseMaterial = new THREE.MeshBasicMaterial({ color: shirtColor });
         const corpse = new THREE.Mesh(new THREE.BoxGeometry(1, 0.5, 1), corpseMaterial);
-        corpse.position.copy(zombie.group.position);
+        corpse.position.copy(zombie.group.position); // Place the corpse where the zombie died
         scene.add(corpse);
 
         // Remove the zombie from the scene
@@ -958,9 +941,6 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-// Start animation
-animate();
-
 function restartGame() {
     console.log("Restarting game...");
 
@@ -993,3 +973,64 @@ function restartGame() {
     // Restart the animation loop
     animate();
 }
+
+// Create a function to add a wooden fence
+function createFence(position, rotation) {
+    const fenceGeometry = new THREE.BoxGeometry(1, 2, 0.1); // Fence is half as tall as the player
+    const fenceMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 }); // Brown color for wood
+    const fence = new THREE.Mesh(fenceGeometry, fenceMaterial);
+    fence.position.copy(position);
+    fence.rotation.y = rotation;
+    scene.add(fence);
+    return fence;
+}
+
+// Add fences around the grass field
+const fenceBoundingBoxes = []; // Store bounding boxes for collision detection
+
+// Front fence
+for (let i = -25; i <= 25; i += 1) { // Extend to cover the corners
+    const fence = createFence(new THREE.Vector3(i, 1, 25), 0);
+    fenceBoundingBoxes.push(new THREE.Box3().setFromObject(fence));
+}
+
+// Back fence
+for (let i = -25; i <= 25; i += 1) { // Extend to cover the corners
+    const fence = createFence(new THREE.Vector3(i, 1, -25), 0);
+    fenceBoundingBoxes.push(new THREE.Box3().setFromObject(fence));
+}
+
+// Left fence
+for (let i = -25; i <= 25; i += 1) { // Extend to cover the corners
+    const fence = createFence(new THREE.Vector3(-25, 1, i), Math.PI / 2);
+    fenceBoundingBoxes.push(new THREE.Box3().setFromObject(fence));
+}
+
+// Right fence
+for (let i = -25; i <= 25; i += 1) { // Extend to cover the corners
+    const fence = createFence(new THREE.Vector3(25, 1, i), Math.PI / 2);
+    fenceBoundingBoxes.push(new THREE.Box3().setFromObject(fence));
+}
+
+// Add corner fences (optional, but can be removed if the above logic fully covers the corners)
+const cornerFences = [
+    createFence(new THREE.Vector3(-25, 1, 25), 0), // Top-left corner
+    createFence(new THREE.Vector3(25, 1, 25), 0), // Top-right corner
+    createFence(new THREE.Vector3(-25, 1, -25), 0), // Bottom-left corner
+    createFence(new THREE.Vector3(25, 1, -25), 0), // Bottom-right corner
+];
+
+// Add corner fences to the bounding boxes
+cornerFences.forEach((cornerFence) => {
+    fenceBoundingBoxes.push(new THREE.Box3().setFromObject(cornerFence));
+});
+
+// Handle window resizing
+window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+});
+
+// Start animation
+animate();
